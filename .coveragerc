@@ -1,0 +1,6 @@
+[run]
+branch = True
+source = networking-opencontrail
+
+[report]
+ignore_errors = True
