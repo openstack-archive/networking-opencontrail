@@ -369,7 +369,8 @@ def getCertKeyCaBundle(bundle, certs):
         bundle_is_stale = False
         bundle_mod_time = os.path.getmtime(bundle)
         for cert in certs:
-            if os.path.getmtime(cert) > bundle_mod_time:
+            if os.path.isfile(cert) and (
+                os.path.getmtime(cert) > bundle_mod_time):
                 bundle_is_stale = True
                 break
         if not bundle_is_stale:

@@ -14,7 +14,6 @@
 #
 
 from neutron.common import exceptions as neutron_exc
-from neutron.db import portbindings_base
 from neutron.db import quota_db  # noqa
 from neutron.extensions import allowedaddresspairs
 from neutron.extensions import l3
@@ -104,7 +103,6 @@ class OpenContrailDriversBase(object):
 
     def __init__(self):
         super(OpenContrailDriversBase, self).__init__()
-        portbindings_base.register_port_dict_function()
         utils.register_vnc_api_options()
 
     def _create_resource(self, res_type, context, res_data):
