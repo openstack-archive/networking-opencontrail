@@ -16,6 +16,14 @@
 from neutron.callbacks import events
 from neutron.callbacks import registry
 from neutron.callbacks import resources
+try:
+    from neutron_lib import context as neutron_context
+except ImportError:
+    from neutron import context as neutron_context
+from neutron.db.db_base_plugin_v2 import NeutronDbPluginV2
+from neutron.db.securitygroups_db import SecurityGroupDbMixin
+from neutron.extensions.securitygroup import SecurityGroupNotFound
+
 from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
 from oslo_utils import excutils
@@ -23,14 +31,93 @@ from oslo_utils import excutils
 LOG = logging.getLogger(__name__)
 
 
-class OpenContrailSecurityGroupHandler(object):
+class OpenContrailSecurityGroupHandler(NeutronDbPluginV2,
+                                       SecurityGroupDbMixin):
     """Security Group Handler for OpenContrail networking.
 
     Registers for the notification of security group updates.
     """
-    def __init__(self, client):
+    def __init__(self, client, synchronize_groups=False):
         self.client = client
         self.subscribe()
+
+        if synchronize_groups:
+            self.synchronize_security_groups()
+
+    def translate_security_group_id(self, context, group):
+        if group['name'] == 'default':
+            context.tenant = group['tenant_id']
+            filters = {
+                'name': 'default',
+            }
+            fields = ['tenant_id', 'id']
+            groups = self.client.drv.get_security_groups(context,
+                                                         filters=filters,
+                                                         fields=fields)
+            for remote in groups:
+                if remote['tenant_id'] == group['tenant_id']:
+                    group['id'] = remote['id']
+                    break
+
+        return group
+
+    def delete_remote_group_rules(self, context, group_id):
+        group = self.client.drv.get_security_group(context, group_id)
+        for rule in group['security_group_rules']:
+            self.client.delete_security_group_rule(context, rule['id'])
+
+    def does_security_group_exist(self, context, group_id):
+        try:
+            self.client.drv.get_security_group(context, group_id)
+            return True
+        except SecurityGroupNotFound:
+            return False
+
+    def synchronize_group(self, context, group):
+        LOG.debug("Syncing group... name: %(name)s, id: %(id)s",
+                  {"name": group['name'], "id": group['id']})
+
+        # Empty tenant breaks Contrail routines. Such group cannot be used
+        # anyway, so it's not synchronized.
+        if group['tenant_id'] == '':
+            return
+
+        group = self.translate_security_group_id(context, group)
+
+        if self.does_security_group_exist(context, group['id']):
+            self.client.update_security_group(context, group['id'], group)
+            self.delete_remote_group_rules(context, group['id'])
+
+            for rule in group['security_group_rules']:
+                if rule.get('remote_group_id') is not None:
+                    remote_group = self.get_security_group(
+                        context,
+                        rule['remote_group_id'])
+                    remote_group = self.translate_security_group_id(
+                        context,
+                        remote_group)
+                    rule['remote_group_id'] = remote_group['id']
+                rule['security_group_id'] = group['id']
+                self.client.create_security_group_rule(context, rule)
+        else:
+            self.client.create_security_group(context, group)
+
+    def synchronize_security_groups(self):
+        """Performs full synchronization of security groups with OpenContrail.
+
+        Basically, it takes all groups available in Neutron and pushes their
+        rules to OpenContrail node, so groups created in OpenContrail that
+        are absent in Neutron remain unchanged.
+        """
+        LOG.info("Started syncing Security Groups with Contrail")
+
+        context = neutron_context.get_admin_context()
+        groups = self.get_security_groups(context)
+
+        for group in groups:
+            self.synchronize_group(context, group)
+
+        LOG.info("Finished syncing Security Groups with Contrail")
 
     @log_helpers.log_method_call
     def create_security_group(self, resource, event, trigger, **kwargs):
@@ -64,7 +151,7 @@ class OpenContrailSecurityGroupHandler(object):
             self.client.delete_security_group(context, sg)
         except Exception as e:
             LOG.error("Failed to delete security group %(sg_id)s"
-                      ": %(err)s"), {"sg_id": sg["id"], "err": e}
+                      ": %(err)s", {"sg_id": sg["id"], "err": e})
 
     @log_helpers.log_method_call
     def update_security_group(self, resource, event, trigger, **kwargs):
