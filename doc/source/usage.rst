@@ -21,16 +21,22 @@ Installing networking-opencontrail as a DevStack plugin (see
 Manual configuration
 --------------------
 
-1. Adjust ``/etc/neutron/plugins/ml2/ml2_conf_opencontrail.ini`` to meet
+#. Adjust ``/etc/neutron/plugins/ml2/ml2_conf_opencontrail.ini`` to meet
    your needs.
-2. Edit ``/etc/neutron/plugins/ml2/ml2_conf.ini`` file and put
-   ``opencontrail`` to ``mechanism_drivers`` list in ``ml2`` section, so it
-   looks similarly to this::
+#. Edit ``/etc/neutron/plugins/ml2/ml2_conf.ini`` file:
+
+   * Add ``opencontrail`` to ``mechanism_drivers`` list in ``ml2`` section
+   * Add ``opencontrail-router`` to ``service_plugins`` list in ``DEFAULT`` section
+
+   After editing file should look similarly to this::
+
+    [DEFAULT]
+    service_plugins = opencontrail-router
 
     [ml2]
     mechanism_drivers = opencontrail
 
-3. Run again Neutron service. Make sure you include all config files: ::
+#. Run again Neutron service. Make sure you include all config files: ::
 
     /usr/local/bin/neutron-server --config-file /etc/neutron/neutron.conf \
     --config-file /etc/neutron/plugins/ml2/ml2_conf.ini \

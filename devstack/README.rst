@@ -21,8 +21,8 @@
 
      > cat local.conf
      [[local|localrc]]
-     OPENCONTRAIL_APISERVER_IP = <ip address>
-     OPENCONTRAIL_APISERVER_PORT = <port-number>
+     OPENCONTRAIL_APISERVER_IP=<ip address>
+     OPENCONTRAIL_APISERVER_PORT=<port-number>
 
 5. Optionally, if you need to use secure SSL connection, specify additional
    configuration variables as below::

@@ -116,7 +116,12 @@ class OpenContrailMechDriver(driver_api.MechanismDriver):
     def create_port_postcommit(self, context):
         """Create a port in OpenContrail."""
         port = {}
-        port['port'] = context.current
+        port['port'] = dict(context.current)
+
+        if (port['port'].get('port_security_enabled') is False and
+                port['port'].get('allowed_address_pairs') == []):
+            del port['port']['allowed_address_pairs']
+
         try:
             self.drv.create_port(context._plugin_context, port)
         except Exception:
@@ -128,7 +133,12 @@ class OpenContrailMechDriver(driver_api.MechanismDriver):
     def update_port_postcommit(self, context):
         """Update a port in OpenContrail."""
         port = {}
-        port['port'] = context.current
+        port['port'] = dict(context.current)
+
+        if (port['port'].get('port_security_enabled') is False and
+                port['port'].get('allowed_address_pairs') == []):
+            del port['port']['allowed_address_pairs']
+
         try:
             self.drv.update_port(context._plugin_context,
                                  port['port']['id'], port)
