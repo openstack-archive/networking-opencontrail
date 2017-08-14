@@ -20,8 +20,6 @@ from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
 from oslo_utils import excutils
 
-from neutron._i18n import _LE
-
 LOG = logging.getLogger(__name__)
 
 
@@ -46,12 +44,12 @@ class OpenContrailSecurityGroupHandler(object):
             self.client.create_security_group(context, sg)
         except Exception as e:
             with excutils.save_and_reraise_exception():
-                LOG.error(_LE("Failed to create a security group %(sg_id)s"
-                              ": %(err)s"), {"sg_id": sg["id"], "err": e})
+                LOG.error("Failed to create a security group %(sg_id)s"
+                          ": %(err)s", {"sg_id": sg["id"], "err": e})
                 try:
                     self.client.delete_security_group(sg)
                 except Exception:
-                    LOG.exception(_LE("Failed to delete security group %s"),
+                    LOG.exception("Failed to delete security group %s",
                                   sg['id'])
 
     @log_helpers.log_method_call
@@ -65,8 +63,8 @@ class OpenContrailSecurityGroupHandler(object):
         try:
             self.client.delete_security_group(context, sg)
         except Exception as e:
-            LOG.error(_LE("Failed to delete security group %(sg_id)s"
-                          ": %(err)s"), {"sg_id": sg["id"], "err": e})
+            LOG.error("Failed to delete security group %(sg_id)s"
+                      ": %(err)s"), {"sg_id": sg["id"], "err": e}
 
     @log_helpers.log_method_call
     def update_security_group(self, resource, event, trigger, **kwargs):
@@ -80,8 +78,8 @@ class OpenContrailSecurityGroupHandler(object):
         try:
             self.client.update_security_group(context, sg_id, sg)
         except Exception as e:
-            LOG.error(_LE("Failed to update security group %(sg_id)s"
-                          ": %(err)s"), {"sg_id": sg["id"], "err": e})
+            LOG.error("Failed to update security group %(sg_id)s"
+                      ": %(err)s"), {"sg_id": sg["id"], "err": e}
 
     @log_helpers.log_method_call
     def create_security_group_rule(self, resource, event, trigger, **kwargs):
@@ -95,14 +93,14 @@ class OpenContrailSecurityGroupHandler(object):
             self.client.create_security_group_rule(context, sgr)
         except Exception as e:
             with excutils.save_and_reraise_exception():
-                LOG.error(_LE("Failed to create a security group %(sgr_id)s "
-                              "rule: %(err)s"),
+                LOG.error("Failed to create a security group %(sgr_id)s "
+                          "rule: %(err)s",
                           {"sgr_id": sgr["id"], "err": e})
                 try:
                     self.client.delete_security_group_rule(context, sgr)
                 except Exception:
-                    LOG.exception(_LE("Failed to delete security group "
-                                      "rule %s"), sgr['id'])
+                    LOG.exception("Failed to delete security group "
+                                  "rule %s", sgr['id'])
 
     @log_helpers.log_method_call
     def delete_security_group_rule(self, resource, event, trigger, **kwargs):
@@ -116,8 +114,8 @@ class OpenContrailSecurityGroupHandler(object):
         try:
             self.client.delete_security_group_rule(context, sgr_id)
         except Exception as e:
-            LOG.error(_LE("Failed to delete security group %(sgr_id)s "
-                          "rule: %(err)s"),
+            LOG.error("Failed to delete security group %(sgr_id)s "
+                      "rule: %(err)s",
                       {"sgr_id": sgr_id, "err": e})
 
     def subscribe(self):
