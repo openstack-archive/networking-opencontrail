@@ -223,6 +223,72 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
 
         mech_driver.drv.assert_has_calls(expected_calls)
 
+    def test_create_security_group(self):
+        ctx = fake_plugin_context('ten-1')
+        sg = {'id': 'sg-1'}
+        self.drv.create_security_group(ctx, sg)
+
+        expected_calls = [
+            mock.call.OpenContrailDrivers(),
+            mock.call.OpenContrailDrivers().create_security_group(
+                ctx, {'security_group': sg})
+        ]
+
+        mech_driver.drv.assert_has_calls(expected_calls)
+
+    def test_delete_security_group(self):
+        ctx = fake_plugin_context('ten-1')
+        sg_id = 'sg-1'
+        self.drv.delete_security_group(ctx, {'id': sg_id})
+
+        expected_calls = [
+            mock.call.OpenContrailDrivers(),
+            mock.call.OpenContrailDrivers().delete_security_group(
+                ctx, sg_id)
+        ]
+
+        mech_driver.drv.assert_has_calls(expected_calls)
+
+    def test_update_security_group(self):
+        ctx = fake_plugin_context('ten-1')
+        sg_id = 'sg-1'
+        sg = {'id': sg_id}
+        self.drv.update_security_group(ctx, sg_id, sg)
+
+        expected_calls = [
+            mock.call.OpenContrailDrivers(),
+            mock.call.OpenContrailDrivers().update_security_group(
+                ctx, sg_id, {'security_group': sg})
+        ]
+
+        mech_driver.drv.assert_has_calls(expected_calls)
+
+    def test_create_security_group_rule(self):
+        ctx = fake_plugin_context('ten-1')
+        sg_rule = {'direction': 'ingress',
+                   'security_group_id': 'sg-1',
+                   'remote_group_id': 'remote-1'}
+        self.drv.create_security_group_rule(ctx, sg_rule)
+        expected_calls = [
+            mock.call.OpenContrailDrivers(),
+            mock.call.OpenContrailDrivers().create_security_group_rule(
+                ctx, {'security_group_rule': sg_rule})
+        ]
+
+        mech_driver.drv.assert_has_calls(expected_calls)
+
+    def test_delete_security_group_rule(self):
+        ctx = fake_plugin_context('ten-1')
+        sg_rule = {'id': 'sg-rule-1'}
+        self.drv.delete_security_group_rule(ctx, sg_rule)
+        expected_calls = [
+            mock.call.OpenContrailDrivers(),
+            mock.call.OpenContrailDrivers().delete_security_group_rule(
+                ctx, sg_rule)
+        ]
+
+        mech_driver.drv.assert_has_calls(expected_calls)
+
     def get_network_context(self, ten_id, net_id, net_name=None):
         if not net_name:
             net_name = 'test_network'
