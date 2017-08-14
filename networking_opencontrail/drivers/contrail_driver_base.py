@@ -92,7 +92,7 @@ class OpenContrailDriversBase(object):
                                     ext_instance.__getattribute__(method))
                 self.supported_extension_aliases.append(ext_name)
             except Exception:
-                LOG.exception(_("Contrail Backend Error"))
+                LOG.exception("Contrail Backend Error")
                 # Converting contrail backend error to Neutron Exception
                 raise exceptions.InvalidContrailExtensionError(
                     ext_name=ext_name, ext_class=ext_class)
