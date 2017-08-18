@@ -11,7 +11,7 @@ Note that this is a hard requirement.
 * Free software: Apache license
 * Documentation: http://docs.openstack.org/developer/networking-opencontrail
 * Source: http://git.openstack.org/cgit/openstack/networking-opencontrail
-* Bugs: http://bugs.launchpad.net/networking-opencontrail
+* Bugs: http://launchpad.net/networking-opencontrail
 
 Features
 --------
