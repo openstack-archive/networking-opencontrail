@@ -369,6 +369,31 @@ class OpenContrailDriversBase(object):
     def remove_router_interface(self, context, router_id, interface_info):
         pass
 
+    # Floating IP handlers
+    def create_floatingip(self, context, floatingip):
+        """Creates a floating IP.
+
+        Creates a new floating IP, and assigns it a symbolic name.
+        """
+
+        return self._create_resource('floatingip', context, floatingip)
+
+    def get_floatingip(self, context, ip_id, fields=None):
+        """Get the attributes of a floating IP."""
+
+        return self._get_resource('floatingip', context, ip_id, fields)
+
+    def update_floatingip(self, context, ip_id, floatingip):
+        """Updates the attributes of a floating IP."""
+
+        return self._update_resource('floatingip', context, ip_id,
+                                     floatingip)
+
+    def delete_floatingip(self, context, ip_id):
+        """Deletes a floating IP."""
+
+        self._delete_resource('floatingip', context, ip_id)
+
     # Security Group handlers
     def create_security_group(self, context, security_group):
         """Creates a Security Group."""

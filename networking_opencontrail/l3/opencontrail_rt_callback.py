@@ -19,6 +19,7 @@ from neutron.db import extraroute_db
 from neutron.db import l3_agentschedulers_db
 from neutron.db import l3_dvr_db
 from neutron.db import l3_gwmode_db
+from neutron_lib import constants as const
 from neutron_lib.plugins import constants as plugin_constants
 from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
@@ -168,3 +169,147 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
                       "%(err)s", {"id": router_id, "err": e})
 
         return new_router
+
+    @log_helpers.log_method_call
+    def create_floatingip(self, context, floatingip,
+                          initial_status=const.FLOATINGIP_STATUS_ACTIVE):
+        fip = floatingip['floatingip']
+
+        if fip.get('port_id') is None:
+            initial_status = const.FLOATINGIP_STATUS_DOWN
+
+        session = db_api.get_writer_session()
+        with session.begin(subtransactions=True):
+            try:
+                fip_dict = super(
+                    OpenContrailRouterHandler, self).create_floatingip(
+                    context, floatingip, initial_status)
+            except Exception as e:
+                LOG.error("Failed to create floating ip %(fip)s: "
+                          "%(err)s", {"fip": fip, "err": e})
+                raise
+
+        try:
+                self.driver.create_floatingip(context,
+                                              {'floatingip': fip_dict})
+                return fip_dict
+        except Exception as e:
+            LOG.error("Failed to create floating ip %(fip)s: "
+                      "%(err)s", {"fip": fip, "err": e})
+            with session.begin(subtransactions=True):
+                super(OpenContrailRouterHandler, self).delete_floatingip(
+                    context, fip_dict['id'])
+            raise
+
+    @log_helpers.log_method_call
+    def update_floatingip(self, context, floatingip_id, floatingip):
+        session = db_api.get_writer_session()
+
+        with session.begin(subtransactions=True):
+            try:
+                old_fip = super(
+                    OpenContrailRouterHandler, self).get_floatingip(
+                    context, floatingip_id)
+
+                fip_dict = super(
+                    OpenContrailRouterHandler, self).update_floatingip(
+                    context, floatingip_id, floatingip)
+            except Exception as e:
+                LOG.error("Failed to update floating ip %(id)s: "
+                          "%(err)s", {"id": floatingip_id, "err": e})
+                raise
+
+        # Update status based on association
+        if fip_dict.get('port_id') is None:
+            fip_dict['status'] = const.FLOATINGIP_STATUS_DOWN
+        else:
+            fip_dict['status'] = const.FLOATINGIP_STATUS_ACTIVE
+
+        try:
+            with session.begin(subtransactions=True):
+                self.update_floatingip_status(context, floatingip_id,
+                                              fip_dict['status'])
+
+            self.driver.update_floatingip(context, floatingip_id,
+                                          {'floatingip': fip_dict})
+            return fip_dict
+        except Exception as e:
+            LOG.error("Failed to update floating ip status %(id)s: "
+                      "%(err)s", {"id": floatingip_id, "err": e})
+
+            with session.begin(subtransactions=True):
+                try:
+                    super(OpenContrailRouterHandler, self).update_floatingip(
+                        context, floatingip_id, old_fip)
+                except Exception as e:
+                    LOG.error("Failed to repair floating ip %(id)s: "
+                              "%(err)s", {"id": floatingip_id, "err": e})
+                    raise
+
+                try:
+                    self.update_floatingip_status(context, floatingip_id,
+                                                  old_fip['status'])
+                except Exception as e:
+                    LOG.error("Failed to repair floating ip status %(id)s: "
+                              "%(err)s", {"id": floatingip_id, "err": e})
+                    raise
+            raise
+
+    @log_helpers.log_method_call
+    def delete_floatingip(self, context, floatingip_id):
+        session = db_api.get_writer_session()
+
+        with session.begin(subtransactions=True):
+            try:
+                old_fip = super(
+                    OpenContrailRouterHandler, self).get_floatingip(
+                    context, floatingip_id)
+
+                super(OpenContrailRouterHandler,
+                      self).delete_floatingip(context, floatingip_id)
+            except Exception as e:
+                LOG.error("Failed to delete floating ip %(id)s: "
+                          "%(err)s", {"id": floatingip_id, "err": e})
+                raise
+
+        try:
+            self.driver.delete_floatingip(context, floatingip_id)
+        except Exception as e:
+            LOG.error("Failed to delete floating ip %(id)s: "
+                      "%(err)s", {"id": floatingip_id, "err": e})
+
+            try:
+                with session.begin(subtransactions=True):
+                    super(OpenContrailRouterHandler, self).create_floatingip(
+                        context, old_fip, old_fip['status'])
+            except Exception as e:
+                LOG.error("Failed to undelete floating ip %(id)s: "
+                          "%(err)s", {"id": floatingip_id, "err": e})
+                raise
+
+            raise
+
+    @log_helpers.log_method_call
+    def disassociate_floatingips(self, context, port_id, do_notify=True):
+        session = db_api.get_session()
+
+        try:
+            with session.begin(subtransactions=True):
+                filters = {'port_id': [port_id]}
+                fip_dicts = self.get_floatingips(context,
+                                                 filters=filters)
+                router_ids = super(OpenContrailRouterHandler,
+                                   self).disassociate_floatingips(context,
+                                                                  port_id,
+                                                                  do_notify)
+                for fip_dict in fip_dicts:
+                    fip_dict = self.get_floatingip(context, fip_dict['id'])
+                    fip_dict['status'] = const.FLOATINGIP_STATUS_DOWN
+                    self.update_floatingip_status(context, fip_dict['id'],
+                                                  fip_dict['status'])
+                    self.driver.update_floatingip(context, fip_dict['id'],
+                                                  {'floatingip': fip_dict})
+            return router_ids
+        except Exception as e:
+            LOG.error("Failed to disassociate floating ips on port %(id)s: "
+                      "%(err)s", {"id": port_id, "err": e})
