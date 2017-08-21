@@ -156,6 +156,13 @@ class OpenContrailMechDriver(driver_api.MechanismDriver):
         except Exception:
             LOG.exception("Delete Port Failed")
 
+    def bind_port(self, context):
+        """Bind port in OpenContrail."""
+        try:
+            self.drv.bind_port(context)
+        except Exception:
+            LOG.exception("Bind Port Failed")
+
     def create_security_group(self, context, sg):
         """Create a Security Group in OpenContrail."""
         sec_g = {}
