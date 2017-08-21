@@ -73,6 +73,17 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
 
         return interface_info
 
+    @staticmethod
+    def _get_floating_ip():
+        floatingip = {
+            'floatingip': {
+                'abc': 123,
+                'id': 'a2f1f29d-571b-4533-907f-5803ab96ead1'
+            },
+        }
+
+        return floatingip
+
     @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
                 "OpenContrailDrivers")
     def test_get_plugin_type(self, _):
@@ -162,3 +173,60 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
         hook.driver.remove_router_interface.assert_called_with(context,
                                                                router_id,
                                                                interface_info)
+
+    @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
+                "OpenContrailDrivers")
+    @mock.patch("neutron.db.l3_dvr_db.L3_NAT_with_dvr_db_mixin."
+                "create_floatingip")
+    def test_create_floatingip(self, l3_nat, driver):
+        context = self._get_mock_network_operation_context()
+        floatingip = self._get_floating_ip()
+        l3_nat.return_value = floatingip
+        hook = opencontrail_rt_callback.OpenContrailRouterHandler()
+
+        hook.create_floatingip(context, floatingip)
+
+        l3_nat.assert_called_with(context, mock.ANY, mock.ANY)
+        hook.driver.create_floatingip.assert_called_with(context,
+                                                         mock.ANY)
+
+    @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
+                "OpenContrailDrivers")
+    @mock.patch("neutron.db.l3_dvr_db.L3_NAT_with_dvr_db_mixin."
+                "get_floatingip")
+    @mock.patch("neutron.db.l3_dvr_db.L3_NAT_with_dvr_db_mixin."
+                "update_floatingip")
+    def test_update_floatingip(self, l3_nat, l3_get, driver):
+        context = self._get_mock_network_operation_context()
+        floatingip = self._get_floating_ip()
+        l3_nat.return_value = floatingip
+        l3_get.return_value = floatingip['floatingip']
+        fip_id = floatingip['floatingip']['id']
+        hook = opencontrail_rt_callback.OpenContrailRouterHandler()
+
+        hook.update_floatingip(context, fip_id, floatingip)
+
+        l3_nat.assert_called_with(context, mock.ANY, mock.ANY)
+        hook.driver.update_floatingip.assert_called_with(context,
+                                                         fip_id,
+                                                         mock.ANY)
+
+    @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
+                "OpenContrailDrivers")
+    @mock.patch("neutron.db.l3_dvr_db.L3_NAT_with_dvr_db_mixin."
+                "get_floatingip")
+    @mock.patch("neutron.db.l3_dvr_db.L3_NAT_with_dvr_db_mixin."
+                "delete_floatingip")
+    def test_delete_floatingip(self, l3_nat, l3_get, driver):
+        context = self._get_mock_network_operation_context()
+        floatingip = self._get_floating_ip()
+        l3_nat.return_value = floatingip
+        l3_get.return_value = floatingip['floatingip']
+        fip_id = floatingip['floatingip']['id']
+        hook = opencontrail_rt_callback.OpenContrailRouterHandler()
+
+        hook.delete_floatingip(context, fip_id)
+
+        l3_nat.assert_called_with(context, fip_id)
+        hook.driver.delete_floatingip.assert_called_with(context,
+                                                         fip_id)
