@@ -1,0 +1,5 @@
+---
+# run stack.sh
+- name: stack.sh again Contrail
+  command: chdir=~/devstack ./stack.sh
+  ignore_errors: no

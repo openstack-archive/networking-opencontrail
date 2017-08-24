@@ -1,0 +1,15 @@
+---
+# Install networking-opencontrail dependencies to Openstack VM
+
+- name: clone contrail-neutron-plugin to satisfy dependencies
+  git: 
+    repo: "https://github.com/Juniper/contrail-neutron-plugin.git"
+    dest: ~/contrail-neutron-plugin 
+    accept_hostkey: yes
+  tags: driver
+
+- name: install contrail-neutron-plugin
+  shell: sudo pip install .
+  args:
+    chdir: ~/contrail-neutron-plugin
+  tags: driver

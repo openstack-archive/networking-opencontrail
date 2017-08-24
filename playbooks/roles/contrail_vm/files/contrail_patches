@@ -1,0 +1,2 @@
+patch $CONTRAIL_DEST/devstack/plugin.sh < plugin.patch
+patch $CONTRAIL_DEST/devstack/lib/contrail_config < contrail_config.patch

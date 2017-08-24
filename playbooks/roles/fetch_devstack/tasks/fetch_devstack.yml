@@ -1,0 +1,14 @@
+---
+# Prepare VM to install devstack
+- name: checkout devstack
+  git: 
+    repo: "https://github.com/openstack-dev/devstack.git"
+    dest: ~/devstack 
+    version: "{{ openstack_branch }}"
+    accept_hostkey: yes
+    force: yes
+
+- name: local.conf
+  template:
+    src: ../templates/{{ vm_group }}_local.conf.j2
+    dest: ~/devstack/local.conf

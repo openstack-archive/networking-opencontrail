@@ -1,0 +1,12 @@
+---
+# Run stack.sh in case if it is already running, unstack first
+
+- name: optionally unstack
+  shell: screen -ls | grep stack && ./unstack
+  args:
+    chdir: ~/devstack
+  ignore_errors: yes
+
+- name: build OpenStack via stack.sh
+  command: chdir=~/devstack ./stack.sh
+  ignore_errors: no
