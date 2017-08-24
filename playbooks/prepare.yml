@@ -1,0 +1,8 @@
+---
+# One time hosts preparation
+
+- hosts: contrail openstack
+  gather_facts: yes
+  become: no
+  roles:
+    - { role: common }

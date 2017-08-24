@@ -15,6 +15,7 @@ Contents
 
    About networking-opencontrail <readme>
    installation
+   installation/playbooks
    devstack
    usage
    contributing

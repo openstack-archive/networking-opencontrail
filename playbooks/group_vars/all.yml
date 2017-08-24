@@ -1,0 +1,30 @@
+---
+# Note: Unused variables should be commented!
+
+# [Optional] Multihost installation with compute node and OpenStack controller on different VMs. Default value True.
+#multihost: True
+
+# [Optional] Do not create initial project networks by Neutron. Default value False.
+#create_initial_networks: False
+
+# [Optional] If service_token not specified default 'token' will be used.
+#service_token:
+# [Optional] If password not specified default 'admin' will be used.
+#admin_pass:
+
+# [Required] IP address for OpenConrail VM.
+contrail_ip:
+# [Required] IP address for Openstack VM.
+openstack_ip:
+
+# [Optional] If not specified default value 8082 will be used.
+#contrail_port: 8082
+
+# [Required] Openstack branch used on VMs.
+openstack_branch:
+# [Required] OpenContrail branch to build on VM.
+contrail_branch:
+
+# [Required] Kernel version supported by OpenContrail branch. This must be a part of package name 
+# for example to use ubuntu 14.0.4 linux-image-3.13.0-77-generic package you should enter 3.13.0-77 here
+kernel_version:

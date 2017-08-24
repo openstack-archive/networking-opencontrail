@@ -1,0 +1,11 @@
+---
+# default nameserver
+nameserver: 8.8.8.8
+
+# default variables values for VMs
+multihost: True
+create_initial_networks: False
+service_token: token
+admin_pass: admin
+# default OpenContrail API port number
+contrail_port: 8082
