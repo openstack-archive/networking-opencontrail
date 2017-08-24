@@ -1,0 +1,11 @@
+---
+# run stack.sh
+- name: build OpenContrail via stack.sh
+  shell: screen -ls | egrep -q '[0-9]+\.stack' && ./unstack.sh || true; ./stack.sh
+  args:
+    chdir: ~/devstack
+  register: task_result
+  until: task_result.rc == 0
+  retries: 3
+  delay: 1
+  ignore_errors: yes 

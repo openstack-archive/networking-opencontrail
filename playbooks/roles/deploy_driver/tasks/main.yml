@@ -1,0 +1,6 @@
+---
+# Copy networking-opencontrail dependencies from Contrail node to OpenStack node
+
+- include: install_contrail_libs.yml
+
+- include: restart_contrail.yml

@@ -1,0 +1,5 @@
+---
+# setting up again OpenContrail VM
+- include: unstack_sh.yml
+- include: services.yml
+- include: stack_sh.yml
