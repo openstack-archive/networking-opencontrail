@@ -401,10 +401,18 @@ class OpenContrailDriversBase(object):
                                    filters, fields)
 
     def get_security_groups_count(self, context, filters=None):
-        return 0
+        """Get the count of security groups."""
+
+        groups_count = self._count_resource('security_group', context,
+                                            filters)
+        return groups_count['count']
 
     def get_security_group_rules_count(self, context, filters=None):
-        return 0
+        """Get the count of security group rules."""
+
+        rules_count = self._count_resource('security_group_rule', context,
+                                           filters)
+        return rules_count['count']
 
     def create_security_group_rule(self, context, security_group_rule):
         """Creates a security group rule."""
