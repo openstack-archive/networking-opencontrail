@@ -4,6 +4,7 @@
   command: apt install {{ item }} -y 
   with_items:
     - "python-apt"
+    - "libsasl2-dev"
   become: yes
 
 - name: install git, pip, setuptools & python-dev
