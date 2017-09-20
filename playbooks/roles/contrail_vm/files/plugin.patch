@@ -1,0 +1,41 @@
+--- /opt/stack/contrail/devstack/plugin.sh	2017-07-28 11:24:23.565728545 +0000
++++ /home/ubuntu/contrail_plugin_zioc/plugin.sh.new	2017-07-28 11:29:49.693737003 +0000
+@@ -62,11 +62,11 @@
+     echo "Installing cassanadra CPP drivers"
+     TMP_PKG_DIR=$(mktemp -d)
+     cd $TMP_PKG_DIR
+-
++    
+     wget http://downloads.datastax.com/cpp-driver/ubuntu/$os_RELEASE/cassandra/v2.5.0/cassandra-cpp-driver_2.5.0-1_amd64.deb
+     wget http://downloads.datastax.com/cpp-driver/ubuntu/$os_RELEASE/cassandra/v2.5.0/cassandra-cpp-driver-dev_2.5.0-1_amd64.deb
+     wget http://downloads.datastax.com/cpp-driver/ubuntu/$os_RELEASE/dependencies/libuv/v1.8.0/libuv_1.8.0-1_amd64.deb
+-
++    
+     sudo dpkg -i *.deb
+ 
+     cd $TOP_DIR
+@@ -176,6 +176,7 @@
+     run_process control "sudo contrail-control --conf_file /etc/contrail/contrail-control.conf"
+     run_process collector "contrail-collector --conf_file /etc/contrail/contrail-collector.conf"
+     run_process analytic-api "contrail-analytics-api --conf_file /etc/contrail/contrail-analytics-api.conf"
++    run_process alarm-gen "/usr/bin/contrail-alarm-gen --conf_file /etc/contrail/contrail-alarm-gen.conf"
+     run_process query-engine "contrail-query-engine --conf_file /etc/contrail/contrail-query-engine.conf"
+     run_process dns "contrail-dns --conf_file /etc/contrail/dns/contrail-dns.conf"
+     #NOTE: contrail-dns checks for '/usr/bin/contrail-named' in /proc/[pid]/cmdline to retrieve bind status
+@@ -183,7 +184,6 @@
+ 
+     run_process ui-jobs "cd $CONTRAIL_DEST/contrail-web-core; sudo nodejs jobServerStart.js"
+     run_process ui-webs "cd $CONTRAIL_DEST/contrail-web-core; sudo nodejs webServerStart.js"
+-
+     SCREEN_NAME="$STACK_SCREEN_NAME"
+ }
+ 
+@@ -372,7 +372,7 @@
+ 
+     echo_summary "Provisionning contrail"
+ 
+-    local provision_api_args="--api_server_ip $SERVICE_HOST --api_server_port 8082 \
++    local provision_api_args="--api_server_ip $APISERVER_IP --api_server_port 8082 \
+         --admin_user $CONTRAIL_ADMIN_USER --admin_password $CONTRAIL_ADMIN_PASSWORD --admin_tenant_name $CONTRAIL_ADMIN_PROJECT"
+ 
+     if is_service_enabled vrouter ; then

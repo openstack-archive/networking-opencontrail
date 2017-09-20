@@ -1,0 +1,9 @@
+---
+# Playbook initialize VM for further installation steps
+
+- include: hostname.yml
+- include: check_variables.yml
+- include: ubuntu_xenial.yml
+- include: ssh_keys.yml
+- include: nameserver.yml
+- include: dependencies.yml

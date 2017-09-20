@@ -1,0 +1,4 @@
+---
+dependencies:
+  - { role: common }
+  - { role: fetch_devstack, vm_group: contrail }

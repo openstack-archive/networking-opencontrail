@@ -1,0 +1,18 @@
+---
+# Run stack.sh in case if it is already running, unstack first
+
+- name: optionally unstack
+  shell: screen -ls | grep stack && ./unstack.sh
+  args:
+    chdir: ~/devstack
+  ignore_errors: yes
+
+- name: build OpenContrail via stack.sh
+  shell: ./stack.sh
+  args:
+    chdir: ~/devstack
+  register: task_result
+  until: task_result.rc == 0
+  retries: 3
+  delay: 1
+  ignore_errors: yes 

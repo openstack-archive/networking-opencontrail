@@ -1,0 +1,19 @@
+---
+# copy set of patches used to setup Contrail VM
+- name: install fixtures
+  pip: 
+    name: "{{ item }}"
+  become: yes
+  become_method: sudo
+  with_items:
+    - 'fixtures'
+
+- name: Install build dependencies
+  apt:
+    name: "{{ item }}"
+  become: yes
+  become_method: sudo
+  with_items:
+    - 'libvirt-bin'
+    - 'qemu-kvm'
+    - 'libcrypto++-dev'
