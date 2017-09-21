@@ -2,23 +2,55 @@
 Setup development VMs using Ansible playbooks
 =============================================
 
-Variables used by configuration templates are stored in ``group_vars``
-directory so be sure to adjust it according to your setup before running
-any playbook. It uses also ``hosts`` for nodes definition so be sure to
-reedit this as well.
+Initial steps
+-------------
 
-Initial steps required by both VMs
-----------------------------------
+Before you run playbooks perform the following steps:
 
-Make sure you have access via ssh to all nodes listed in ``playbooks/hosts``
-file
+#. Prepare machines for Contrail node and OpenStack node
+
+#. Make sure you have key-based SSH access to prepared nodes::
+
+    ssh contrail-node
+    ssh openstack-node
+
+#. Install Ansible::
+
+    sudo apt install ansible
+
+Configuring playbooks
+---------------------
+
+Be sure to adjust configuration according to your setup before running
+any playbook:
+
+#. Define nodes by specifying SSH names of their machines in ``playbooks/hosts`` file::
+
+    [contrail]
+    contrail-node
+
+    [openstack]
+    openstack-node
+
+#. Configure deployment by setting ``playbooks/group_vars/all.yml`` variables, for example::
+
+    ---
+    # Internal IP addresses of both nodes
+    contrail_ip: 192.168.0.2
+    openstack_ip: 192.168.0.3
+
+    # Names of git branches
+    openstack_branch: stable/ocata
+    contrail_branch: R4.0
+
+    kernel_version: 3.13.0-77
 
 Setup OpenContrail & Devstack VMs
 ---------------------------------
 
 Run ``main.yml`` playbook (it could take few hours to finish)::
 
-     ./main.yml
+     playbooks/main.yml
 
 
 NOTICE
