@@ -383,6 +383,10 @@ def getCertKeyCaBundle(bundle, certs):
             raise
     with open(bundle, 'w') as ofile:
         for cert in certs:
+            if not os.path.isfile(cert):
+                LOG.debug("Cert file not present: %s" % cert)
+                continue
+
             with open(cert) as ifile:
                 for line in ifile:
                     ofile.write(line)
