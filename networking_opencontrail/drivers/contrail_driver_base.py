@@ -151,13 +151,13 @@ class OpenContrailDriversBase(object):
         self._delete_resource('network', context, network_id)
 
     def get_networks(self, context, filters=None, fields=None):
-        """Get the list of Virtual Networks."""
+        """Gets the list of Virtual Networks."""
 
         return self._list_resource('network', context, filters,
                                    fields)
 
     def get_networks_count(self, context, filters=None):
-        """Get the count of Virtual Network."""
+        """Gets the count of Virtual Network."""
 
         networks_count = self._count_resource('network', context, filters)
         return networks_count['count']
@@ -189,7 +189,7 @@ class OpenContrailDriversBase(object):
         return self._make_subnet_dict(subnet)
 
     def get_subnet(self, context, subnet_id, fields=None):
-        """Get the attributes of a particular subnet."""
+        """Gets the attributes of a particular subnet."""
 
         return self._get_subnet(context, subnet_id, fields)
 
@@ -209,14 +209,14 @@ class OpenContrailDriversBase(object):
         self._delete_resource('subnet', context, subnet_id)
 
     def get_subnets(self, context, filters=None, fields=None):
-        """Get the list of subnets."""
+        """Gets the list of subnets."""
 
         return [self._make_subnet_dict(s)
                 for s in self._list_resource(
                     'subnet', context, filters, fields)]
 
     def get_subnets_count(self, context, filters=None):
-        """Get the count of subnets."""
+        """Gets the count of subnets."""
 
         subnets_count = self._count_resource('subnet', context, filters)
         return subnets_count['count']
@@ -281,7 +281,7 @@ class OpenContrailDriversBase(object):
         return port
 
     def get_port(self, context, port_id, fields=None):
-        """Get the attributes of a particular port."""
+        """Gets the attributes of a particular port."""
 
         return self._get_port(context, port_id, fields)
 
@@ -320,7 +320,7 @@ class OpenContrailDriversBase(object):
         self._delete_resource('port', context, port_id)
 
     def get_ports(self, context, filters=None, fields=None):
-        """Get all ports.
+        """Gets all ports.
 
         Retrieves all port identifiers belonging to the
         specified Virtual Network with the specfied filter.
@@ -329,7 +329,7 @@ class OpenContrailDriversBase(object):
         return self._list_resource('port', context, filters, fields)
 
     def get_ports_count(self, context, filters=None):
-        """Get the count of ports."""
+        """Gets the count of ports."""
 
         ports_count = self._count_resource('port', context, filters)
         return ports_count['count']
@@ -345,7 +345,7 @@ class OpenContrailDriversBase(object):
         return self._create_resource('router', context, router)
 
     def get_router(self, context, router_id, fields=None):
-        """Get the attributes of a router."""
+        """Gets the attributes of a router."""
 
         return self._get_resource('router', context, router_id, fields)
 
@@ -366,7 +366,7 @@ class OpenContrailDriversBase(object):
         return self._list_resource('router', context, filters, fields)
 
     def get_routers_count(self, context, filters=None):
-        """Get the count of routers."""
+        """Gets the count of routers."""
 
         routers_count = self._count_resource('router', context, filters)
         return routers_count['count']
@@ -387,7 +387,7 @@ class OpenContrailDriversBase(object):
         return self._create_resource('floatingip', context, floatingip)
 
     def get_floatingip(self, context, ip_id, fields=None):
-        """Get the attributes of a floating IP."""
+        """Gets the attributes of a floating IP."""
 
         return self._get_resource('floatingip', context, ip_id, fields)
 
@@ -409,7 +409,7 @@ class OpenContrailDriversBase(object):
         return self._create_resource('route_table', context, table)
 
     def get_route_table(self, context, table_id, fields=None):
-        """Get the attributes of a route table."""
+        """Gets the attributes of a route table."""
 
         return self._get_resource('route_table', context, table_id, fields)
 
@@ -430,7 +430,7 @@ class OpenContrailDriversBase(object):
         return self._list_resource('route_table', context, filters, fields)
 
     def get_route_tables_count(self, context, filters=None):
-        """Get the count of route tables."""
+        """Gets the count of route tables."""
 
         route_tables_count = self._count_resource('route_table', context,
                                                   filters)
@@ -443,7 +443,7 @@ class OpenContrailDriversBase(object):
         return self._create_resource('nat_instance', context, instance)
 
     def get_nat_instance(self, context, instance_id, fields=None):
-        """Get the attributes of a NAT instance."""
+        """Gets the attributes of a NAT instance."""
 
         return self._get_resource('nat_instance', context, instance_id,
                                   fields)
@@ -465,7 +465,7 @@ class OpenContrailDriversBase(object):
         return self._list_resource('nat_instance', context, filters, fields)
 
     def get_nat_instances_count(self, context, filters=None):
-        """Get the count of NAT instances."""
+        """Gets the count of NAT instances."""
 
         nat_instances_count = self._count_resource('nat_instance', context,
                                                    filters)
@@ -479,7 +479,7 @@ class OpenContrailDriversBase(object):
                                      security_group)
 
     def get_security_group(self, context, sg_id, fields=None, tenant_id=None):
-        """Get the attributes of a security group."""
+        """Gets the attributes of a security group."""
 
         return self._get_resource('security_group', context, sg_id, fields)
 
@@ -503,14 +503,14 @@ class OpenContrailDriversBase(object):
                                    filters, fields)
 
     def get_security_groups_count(self, context, filters=None):
-        """Get the count of security groups."""
+        """Gets the count of security groups."""
 
         groups_count = self._count_resource('security_group', context,
                                             filters)
         return groups_count['count']
 
     def get_security_group_rules_count(self, context, filters=None):
-        """Get the count of security group rules."""
+        """Gets the count of security group rules."""
 
         rules_count = self._count_resource('security_group_rule', context,
                                            filters)
@@ -528,7 +528,7 @@ class OpenContrailDriversBase(object):
         self._delete_resource('security_group_rule', context, sg_rule_id)
 
     def get_security_group_rule(self, context, sg_rule_id, fields=None):
-        """Get the attributes of a security group rule."""
+        """Gets the attributes of a security group rule."""
 
         return self._get_resource('security_group_rule', context,
                                   sg_rule_id, fields)
