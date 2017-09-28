@@ -41,3 +41,21 @@ Manual configuration
     /usr/local/bin/neutron-server --config-file /etc/neutron/neutron.conf \
     --config-file /etc/neutron/plugins/ml2/ml2_conf.ini \
     --config-file /etc/neutron/plugins/ml2/ml2_conf_opencontrail.ini
+
+Support for BGPVPN extension
+----------------------------
+
+.. note::
+   BGPVPN extension is supported only on Contrail 4.0 or higher.
+
+To enable support for BGPVPN extension:
+
+#. Make sure ``networking-bgpvpn`` is installed and enabled
+   (see `official installation guide <https://docs.openstack.org/networking-bgpvpn/latest/install/index.html#installation>`_).
+
+#. Enable Contrail extension driver by editing Neutron config file (i.e. ``/etc/neutron/plugins/ml2/ml2_conf.ini``)::
+
+      [service_providers]
+      service_provider = BGPVPN:OpenContrail:networking_opencontrail.bgpvpn.driver.ContrailBGPVPNDriver:default
+
+#. Restart ``neutron-server``.

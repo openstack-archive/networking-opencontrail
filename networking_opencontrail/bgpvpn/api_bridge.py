@@ -157,6 +157,11 @@ class ContrailBgpvpnApiBridge(object):
                     exclude_hrefs=None, shared=None, parent_type=None,
                     parent_fq_name_str=None, parent_id=None,
                     back_ref_id=None, obj_uuids=None):
+        if 'name' in filters:
+            filters['display_name'] = filters.pop('name')
+        if 'type' in filters:
+            filters['bgpvpn_type'] = filters.pop('type')
+
         query = {
             'detail': detail,
             'fields': fields,
