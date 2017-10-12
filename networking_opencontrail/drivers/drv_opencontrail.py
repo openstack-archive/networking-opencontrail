@@ -194,9 +194,9 @@ class OpenContrailDrivers(driver_base.OpenContrailDriversBase):
                  'operation': operation,
                  'type': apitype,
                  'tenant_id': getattr(context, 'tenant_id', None)}
-        if context.roles:
+        if getattr(context, 'roles', None):
             cdict['roles'] = context.roles
-        if context.tenant:
+        if getattr(context, 'tenant', None):
             cdict['tenant'] = context.tenant
         return cdict
 

@@ -20,7 +20,9 @@ from neutron.extensions import l3
 from neutron.extensions import portbindings
 from neutron.extensions import securitygroup
 
+from neutron_lib.api.definitions.portbindings import CAP_PORT_FILTER
 from neutron_lib.constants import ATTR_NOT_SPECIFIED
+from neutron_lib.constants import PORT_STATUS_ACTIVE
 # from neutron_lib.exceptions import InvalidInput
 # from neutron_lib.exceptions import NeutronException
 # from neutron_lib.exceptions import ServiceUnavailable
@@ -318,6 +320,34 @@ class OpenContrailDriversBase(object):
         """
 
         self._delete_resource('port', context, port_id)
+
+    def bind_port(self, context):
+        """Attempt to bind a port.
+
+        :param context: PortContext instance describing the port
+
+        Called inside transaction context on session, prior to
+        create_port_precommit or update_port_precommit, to
+        attempt to establish a port binding. If the driver is able to
+        bind the port, it calls context.set_binding with the binding
+        details.
+        """
+
+        port = {'port': context.current}
+        port_id = context.current['id']
+
+        self.update_port(context, port_id, port)
+
+        vif_type = 'vrouter'
+        vif_details = {CAP_PORT_FILTER: True}
+        port_status = port.get('status', PORT_STATUS_ACTIVE)
+
+        for segment in context.segments_to_bind:
+            context.set_binding(
+                segment['id'],
+                vif_type,
+                vif_details,
+                port_status)
 
     def get_ports(self, context, filters=None, fields=None):
         """Get all ports.
