@@ -1,0 +1,10 @@
+Verified+1: Jenkins
+Code-Review+1: Kamil <kamil.renczewski@gmail.com>
+Code-Review+2: Sukhdev Kapur <sukhdevkapur@gmail.com>
+Workflow+1: Sukhdev Kapur <sukhdevkapur@gmail.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Tue, 17 Oct 2017 18:56:23 +0000
+Reviewed-on: https://review.openstack.org/498815
+Project: openstack/networking-opencontrail
+Branch: refs/heads/master
