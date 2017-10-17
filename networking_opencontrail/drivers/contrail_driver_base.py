@@ -432,6 +432,75 @@ class OpenContrailDriversBase(object):
 
         self._delete_resource('floatingip', context, ip_id)
 
+    # Route table handlers
+    def create_route_table(self, context, table):
+        """Creates a route table."""
+
+        return self._create_resource('route_table', context, table)
+
+    def get_route_table(self, context, table_id, fields=None):
+        """Get the attributes of a route table."""
+
+        return self._get_resource('route_table', context, table_id, fields)
+
+    def update_route_table(self, context, table_id, table):
+        """Updates the attributes of a route table."""
+
+        return self._update_resource('route_table', context, table_id,
+                                     table)
+
+    def delete_route_table(self, context, table_id):
+        """Deletes a route table."""
+
+        self._delete_resource('route_table', context, table_id)
+
+    def get_route_tables(self, context, filters=None, fields=None):
+        """Retrieves all route tables identifiers."""
+
+        return self._list_resource('route_table', context, filters, fields)
+
+    def get_route_tables_count(self, context, filters=None):
+        """Get the count of route tables."""
+
+        route_tables_count = self._count_resource('route_table', context,
+                                                  filters)
+        return route_tables_count['count']
+
+    # NAT instance handlers
+    def create_nat_instance(self, context, instance):
+        """Creates a NAT instance."""
+
+        return self._create_resource('nat_instance', context, instance)
+
+    def get_nat_instance(self, context, instance_id, fields=None):
+        """Get the attributes of a NAT instance."""
+
+        return self._get_resource('nat_instance', context, instance_id,
+                                  fields)
+
+    def update_nat_instance(self, context, instance_id, instance):
+        """Updates the attributes of a NAT instance."""
+
+        return self._update_resource('nat_instance', context, instance_id,
+                                     instance)
+
+    def delete_nat_instance(self, context, instance_id):
+        """Deletes a NAT instance."""
+
+        self._delete_resource('nat_instance', context, instance_id)
+
+    def get_nat_instances(self, context, filters=None, fields=None):
+        """Retrieves all NAT instances identifiers."""
+
+        return self._list_resource('nat_instance', context, filters, fields)
+
+    def get_nat_instances_count(self, context, filters=None):
+        """Get the count of NAT instances."""
+
+        nat_instances_count = self._count_resource('nat_instance', context,
+                                                   filters)
+        return nat_instances_count['count']
+
     # Security Group handlers
     def create_security_group(self, context, security_group):
         """Creates a Security Group."""
