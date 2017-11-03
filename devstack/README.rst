@@ -4,12 +4,12 @@
 
 1. Download DevStack::
 
-     git clone https://git.openstack.org/openstack-dev/openstack
+     git clone https://git.openstack.org/openstack-dev/devstack
      cd devstack
 
 2. Copy the sample local.conf, if you already do not have local.conf::
 
-     cp devstack/samples/local.conf local.conf
+     cp samples/local.conf .
 
 3. Add this repo as an external repository::
 
