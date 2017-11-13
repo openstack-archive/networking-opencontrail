@@ -4,7 +4,7 @@
 
 1. Download DevStack::
 
-     git clone https://git.openstack.org/openstack-dev/openstack
+     git clone https://git.openstack.org/openstack-dev/devstack
      cd devstack
 
 2. Copy the sample local.conf, if you already do not have local.conf::
