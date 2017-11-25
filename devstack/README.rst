@@ -9,7 +9,7 @@
 
 2. Copy the sample local.conf, if you already do not have local.conf::
 
-     cp devstack/samples/local.conf local.conf
+     cp samples/local.conf .
 
 3. Add this repo as an external repository::
 
