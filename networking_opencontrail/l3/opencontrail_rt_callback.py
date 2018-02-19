@@ -20,10 +20,14 @@ from neutron.db import l3_agentschedulers_db
 from neutron.db import l3_dvr_db
 from neutron.db import l3_gwmode_db
 from neutron_lib import constants as const
-from neutron_lib.plugins import constants as plugin_constants
 from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
 from oslo_utils import excutils
+
+try:  # neutron_lib 1.1.0 has not neutron_lib.plugins.constants package
+    from neutron_lib.plugins import constants as plugin_constants
+except ImportError:
+    from neutron_lib import constants as plugin_constants
 
 import networking_opencontrail.drivers.drv_opencontrail as driver
 
