@@ -15,10 +15,10 @@
 
 from neutron.common import exceptions as neutron_exc
 from neutron.db import quota_db  # noqa
-from neutron.extensions import allowedaddresspairs
-from neutron.extensions import l3
 from neutron.extensions import portbindings
 from neutron.extensions import securitygroup
+from neutron_lib.exceptions import allowedaddresspairs
+from neutron_lib.exceptions import l3
 
 from neutron_lib.api.definitions.portbindings import CAP_PORT_FILTER
 from neutron_lib.constants import ATTR_NOT_SPECIFIED
