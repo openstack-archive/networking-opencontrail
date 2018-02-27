@@ -195,7 +195,9 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
                 "get_floatingip")
     @mock.patch("neutron.db.l3_dvr_db.L3_NAT_with_dvr_db_mixin."
                 "update_floatingip")
-    def test_update_floatingip(self, l3_nat, l3_get, driver):
+    @mock.patch("neutron.db.l3_dvr_db.L3_NAT_with_dvr_db_mixin."
+                "update_floatingip_status")
+    def test_update_floatingip(self, l3_nat, l3_get, **kwargs):
         context = self._get_mock_network_operation_context()
         floatingip = self._get_floating_ip()
         l3_nat.return_value = floatingip
