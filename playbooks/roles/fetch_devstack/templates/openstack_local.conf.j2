@@ -19,7 +19,7 @@ KEYSTONE_BRANCH={{ openstack_branch }}
 NEUTRON_BRANCH={{ openstack_branch }}
 
 LOG_COLOR=True
-#USE_SCREEN=True
+USE_SCREEN=True
 disable_service n-net n-cpu c-sch c-api c-vol q-dhcp q-agt q-l3 dstat tempest
 
 NEUTRON_CREATE_INITIAL_NETWORKS={{ create_initial_networks }}
@@ -28,6 +28,6 @@ Q_PLUGIN=ml2
 
 ML2_L3_PLUGIN=opencontrail-router
 
-CONTRAIL_DRIVER_CONTROLLER='{{ contrail_ip }}'
-CONTRAIL_DRIVER_PORT={{ contrail_port }}
+OPENCONTRAIL_APISERVER_IP='{{ contrail_ip }}'
+OPENCONTRAIL_APISERVER_PORT={{ contrail_port }}
 enable_plugin networking-opencontrail https://github.com/openstack/networking-opencontrail

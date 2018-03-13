@@ -1,3 +1,4 @@
 patch $CONTRAIL_DEST/devstack/plugin.sh < plugin.patch
+patch $CONTRAIL_DEST/devstack/plugin.sh < contrail_plugin_diff.patch
 patch $CONTRAIL_DEST/devstack/lib/contrail_config < contrail_config.patch
 patch $CONTRAIL_DEST/controller/src/analytics/SConscript < Analytics-SConscript.patch
