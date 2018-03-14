@@ -17,12 +17,12 @@ import logging
 import mock
 
 from neutron.common import exceptions as neutron_exc
-from neutron.extensions import allowedaddresspairs
-from neutron.extensions import l3
 from neutron.extensions import securitygroup
 from neutron.tests.unit.extensions import base as test_extensions_base
 from neutron_lib.constants import ATTR_NOT_SPECIFIED
 from neutron_lib import exceptions
+from neutron.extensions import allowedaddresspairs
+from neutron.extensions import l3
 
 from networking_opencontrail.common.exceptions import HttpResponseError
 from networking_opencontrail.drivers import contrail_driver_base as base
