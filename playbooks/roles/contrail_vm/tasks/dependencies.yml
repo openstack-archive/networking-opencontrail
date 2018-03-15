@@ -17,3 +17,4 @@
     - 'libvirt-bin'
     - 'qemu-kvm'
     - 'libcrypto++-dev'
+    - 'libboost-thread1.58-dev'
