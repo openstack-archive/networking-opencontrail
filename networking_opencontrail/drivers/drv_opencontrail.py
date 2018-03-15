@@ -24,7 +24,7 @@ from neutron.db import quota_db  # noqa
 
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_serialization import jsonutils as json
+from oslo_serialization import jsonutils
 
 from eventlet.greenthread import getcurrent
 from simplejson import JSONDecodeError
@@ -144,7 +144,7 @@ class OpenContrailDrivers(driver_base.OpenContrailDriversBase):
             if (response.status_code == requests.codes.ok):
                 # plan is to re-issue original request with new token
                 auth_headers = headers or {}
-                authn_content = json.loads(response.text)
+                authn_content = jsonutils.loads(response.text)
                 self._authn_token = authn_content['access']['token']['id']
                 auth_headers['X-AUTH-TOKEN'] = self._authn_token
                 response = self._request_api_server(url, data, auth_headers)
@@ -179,7 +179,7 @@ class OpenContrailDrivers(driver_base.OpenContrailDriversBase):
 
     def _request_backend(self, context, data_dict, obj_name, action):
         context_dict = self._encode_context(context, action, obj_name)
-        data = json.dumps({'context': context_dict, 'data': data_dict})
+        data = jsonutils.dumps({'context': context_dict, 'data': data_dict})
 
         url_path = "%s/%s" % (self.PLUGIN_URL_PREFIX, obj_name)
         response = self._relay_request(url_path, data=data)

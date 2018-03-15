@@ -13,6 +13,8 @@
 #    under the License.
 #
 
+from neutron._i18n import _LE
+from neutron._i18n import _LW
 from neutron.db import api as db_api
 from neutron.db import common_db_mixin
 from neutron.db import extraroute_db
@@ -20,7 +22,6 @@ from neutron.db import l3_agentschedulers_db
 from neutron.db import l3_dvr_db
 from neutron.db import l3_gwmode_db
 from neutron_lib import constants as const
-from neutron_lib.plugins import constants as plugin_constants
 from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
 from oslo_utils import excutils
@@ -47,7 +48,7 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
         self.driver = driver.OpenContrailDrivers()
 
     def get_plugin_type(self):
-        return plugin_constants.L3
+        return const.L3
 
     def get_plugin_description(self):
         """Returns string description of the plugin."""
@@ -68,12 +69,12 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
                       self).create_router(context, {'router': router})
         except Exception as e:
             with excutils.save_and_reraise_exception():
-                LOG.error("Failed to create a router %(id)s: %(err)s",
+                LOG.error(_LE("Failed to create a router %(id)s: %(err)s"),
                           {"id": router["id"], "err": e})
                 try:
                     self.driver.delete_router(context, router['id'])
                 except Exception:
-                    LOG.exception("Failed to delete router %s",
+                    LOG.exception(_LE("Failed to delete router %s"),
                                   router['id'])
 
         return router
@@ -92,7 +93,7 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
             try:
                 self.driver.delete_router(context, router_id)
             except Exception as e:
-                LOG.error("Failed to delete router %(id)s: %(err)s",
+                LOG.error(_LE("Failed to delete router %(id)s: %(err)s"),
                           {"id": router_id, "err": e})
 
     @log_helpers.log_method_call
@@ -102,8 +103,8 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
         Invokes back-end driver to update router in OpenContrail.
         """
         if 'name' in router['router']:
-            LOG.warning("OpenContrail doesn't allow for changing router "
-                        "%(id)s name to %(name)s",
+            LOG.warning(_LW("OpenContrail doesn't allow for changing router "
+                        "%(id)s name to %(name)s"),
                         {"id": router_id, "name": router['router']['name']})
 
         session = db_api.get_writer_session()
@@ -114,7 +115,7 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
             try:
                 self.driver.update_router(context, router_id, router)
             except Exception as e:
-                LOG.error("Failed to update router %(id)s: %(err)s",
+                LOG.error(_LE("Failed to update router %(id)s: %(err)s"),
                           {"id": router_id, "err": e})
 
         return router_dict
@@ -138,14 +139,14 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
                                              interface_info)
         except Exception as e:
             with excutils.save_and_reraise_exception():
-                LOG.error("Failed to add interface to router %(id)s: "
-                          "%(err)s", {"id": router_id, "err": e})
+                LOG.error(_LE("Failed to add interface to router %(id)s: "
+                          "%(err)s"), {"id": router_id, "err": e})
                 try:
                     self.remove_router_interface(context, router_id,
                                                  interface_info)
                 except Exception:
-                    LOG.exception("Failed to delete interface of router %s",
-                                  router_id)
+                    LOG.exception(_LE("Failed to delete interface of router "
+                                      "%s"), router_id)
 
         return new_router
 
@@ -165,8 +166,8 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
             self.driver.remove_router_interface(context, router_id,
                                                 interface_info)
         except Exception as e:
-            LOG.error("Failed to remove router %(id)s interface: "
-                      "%(err)s", {"id": router_id, "err": e})
+            LOG.error(_LE("Failed to remove router %(id)s interface: "
+                      "%(err)s"), {"id": router_id, "err": e})
 
         return new_router
 
@@ -185,8 +186,8 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
                     OpenContrailRouterHandler, self).create_floatingip(
                     context, floatingip, initial_status)
             except Exception as e:
-                LOG.error("Failed to create floating ip %(fip)s: "
-                          "%(err)s", {"fip": fip, "err": e})
+                LOG.error(_LE("Failed to create floating ip %(fip)s: "
+                          "%(err)s"), {"fip": fip, "err": e})
                 raise
 
         try:
@@ -194,8 +195,8 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
                                               {'floatingip': fip_dict})
                 return fip_dict
         except Exception as e:
-            LOG.error("Failed to create floating ip %(fip)s: "
-                      "%(err)s", {"fip": fip, "err": e})
+            LOG.error(_LE("Failed to create floating ip %(fip)s: "
+                      "%(err)s"), {"fip": fip, "err": e})
             with session.begin(subtransactions=True):
                 super(OpenContrailRouterHandler, self).delete_floatingip(
                     context, fip_dict['id'])
@@ -215,8 +216,8 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
                     OpenContrailRouterHandler, self).update_floatingip(
                     context, floatingip_id, floatingip)
             except Exception as e:
-                LOG.error("Failed to update floating ip %(id)s: "
-                          "%(err)s", {"id": floatingip_id, "err": e})
+                LOG.error(_LE("Failed to update floating ip %(id)s: "
+                          "%(err)s"), {"id": floatingip_id, "err": e})
                 raise
 
         # Update status based on association
@@ -234,24 +235,25 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
                                           {'floatingip': fip_dict})
             return fip_dict
         except Exception as e:
-            LOG.error("Failed to update floating ip status %(id)s: "
-                      "%(err)s", {"id": floatingip_id, "err": e})
+            LOG.error(_LE("Failed to update floating ip status %(id)s: "
+                      "%(err)s"), {"id": floatingip_id, "err": e})
 
             with session.begin(subtransactions=True):
                 try:
                     super(OpenContrailRouterHandler, self).update_floatingip(
                         context, floatingip_id, old_fip)
                 except Exception as e:
-                    LOG.error("Failed to repair floating ip %(id)s: "
-                              "%(err)s", {"id": floatingip_id, "err": e})
+                    LOG.error(_LE("Failed to repair floating ip %(id)s: "
+                              "%(err)s"), {"id": floatingip_id, "err": e})
                     raise
 
                 try:
                     self.update_floatingip_status(context, floatingip_id,
                                                   old_fip['status'])
                 except Exception as e:
-                    LOG.error("Failed to repair floating ip status %(id)s: "
-                              "%(err)s", {"id": floatingip_id, "err": e})
+                    LOG.error(_LE("Failed to repair floating ip status "
+                                  "%(id)s: %(err)s"),
+                              {"id": floatingip_id, "err": e})
                     raise
             raise
 
@@ -268,15 +270,15 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
                 super(OpenContrailRouterHandler,
                       self).delete_floatingip(context, floatingip_id)
             except Exception as e:
-                LOG.error("Failed to delete floating ip %(id)s: "
-                          "%(err)s", {"id": floatingip_id, "err": e})
+                LOG.error(_LE("Failed to delete floating ip %(id)s: "
+                          "%(err)s"), {"id": floatingip_id, "err": e})
                 raise
 
         try:
             self.driver.delete_floatingip(context, floatingip_id)
         except Exception as e:
-            LOG.error("Failed to delete floating ip %(id)s: "
-                      "%(err)s", {"id": floatingip_id, "err": e})
+            LOG.error(_LE("Failed to delete floating ip %(id)s: "
+                      "%(err)s"), {"id": floatingip_id, "err": e})
 
             try:
                 with session.begin(subtransactions=True):
@@ -285,8 +287,8 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
                                                   {'floatingip': old_fip},
                                                   old_fip['status'])
             except Exception as e:
-                LOG.error("Failed to undelete floating ip %(id)s: "
-                          "%(err)s", {"id": floatingip_id, "err": e})
+                LOG.error(_LE("Failed to undelete floating ip %(id)s: "
+                          "%(err)s"), {"id": floatingip_id, "err": e})
                 raise
 
             raise
@@ -313,6 +315,6 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
                                                   {'floatingip': fip_dict})
             return router_ids
         except Exception as e:
-            LOG.error("Failed to disassociate floating ips on port %(id)s: "
-                      "%(err)s", {"id": port_id, "err": e})
+            LOG.error(_LE("Failed to disassociate floating ips on port "
+                          "%(id)s: %(err)s"), {"id": port_id, "err": e})
             raise
