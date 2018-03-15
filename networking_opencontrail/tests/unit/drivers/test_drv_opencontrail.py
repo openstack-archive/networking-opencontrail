@@ -13,7 +13,6 @@
 #    under the License.
 #
 
-import json
 import logging
 import mock
 import requests
@@ -23,6 +22,8 @@ from neutron.tests.unit.extensions import base as test_extensions_base
 from neutron_lib.constants import ATTR_NOT_SPECIFIED
 
 from networking_opencontrail.drivers import drv_opencontrail
+
+from oslo_serialization import jsonutils
 
 
 class ApiRequestsTestCases(test_extensions_base.ExtensionTestCase):
@@ -89,7 +90,7 @@ class ApiRequestsTestCases(test_extensions_base.ExtensionTestCase):
         response_bad = requests.Response()
         response_bad.status_code = requests.codes.unauthorized
         token = "xyztoken"
-        text.return_value = json.dumps({
+        text.return_value = jsonutils.dumps({
             'access': {
                 'token': {
                     'id': token
