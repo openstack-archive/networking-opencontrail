@@ -22,7 +22,6 @@ from neutron.db import l3_agentschedulers_db
 from neutron.db import l3_dvr_db
 from neutron.db import l3_gwmode_db
 from neutron_lib import constants as const
-from neutron_lib.plugins import constants as plugin_constants
 from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
 from oslo_utils import excutils
@@ -49,7 +48,7 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
         self.driver = driver.OpenContrailDrivers()
 
     def get_plugin_type(self):
-        return plugin_constants.L3
+        return const.L3
 
     def get_plugin_description(self):
         """Returns string description of the plugin."""

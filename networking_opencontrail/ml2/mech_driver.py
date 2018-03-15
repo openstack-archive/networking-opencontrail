@@ -17,14 +17,14 @@ from oslo_log import log as logging
 
 import networking_opencontrail.drivers.drv_opencontrail as drv
 from neutron._i18n import _LE
-from neutron.plugins.ml2 import driver_api
+from neutron.plugins.ml2 import driver_api as api
 
 import opencontrail_sg_callback
 
 LOG = logging.getLogger(__name__)
 
 
-class OpenContrailMechDriver(driver_api.MechanismDriver):
+class OpenContrailMechDriver(api.MechanismDriver):
     """Main ML2 Mechanism driver from OpenContrail.
 
     This driver deals with all resources managed through ML2

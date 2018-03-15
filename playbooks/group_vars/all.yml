@@ -21,7 +21,7 @@ openstack_ip:
 #contrail_port: 8082
 
 # [Required] Openstack branch used on VMs.
-openstack_branch:
+openstack_branch: stable/ocata
 # [Required] OpenContrail branch to build on VM.
 contrail_branch:
 
