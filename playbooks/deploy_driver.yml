@@ -1,15 +1,4 @@
 ---
-- hosts: contrail
-  gather_facts: no 
-  become: no
-  roles:
-    - { role: fetch_deps }
-
-- hosts: openstack 
-  gather_facts: no 
-  become: no
-  roles:
-    - { role: deploy_driver }
 
 - hosts: contrail
   gather_facts: no 
