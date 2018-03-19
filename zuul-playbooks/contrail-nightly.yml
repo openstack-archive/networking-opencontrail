@@ -1,0 +1,8 @@
+- hosts: all
+  tasks:
+    - include_role:
+        name: run-devstack
+
+    - set_fact:
+        devstack_base_dir: /opt/stack
+      when: devstack_base_dir is not defined

@@ -1,0 +1,15 @@
+- project:
+    name: openstack/networking-ppencontrail
+    check:
+      jobs:
+        - contrail-nightly
+
+- job:
+    voting: false
+    name: contrail-integration
+    parent: legacy-dsvm-base
+    timeout: 3000
+    required-projects:
+      - openstack-infra/devstack-gate
+    run: playbooks/contrail-nightly.yaml
+
