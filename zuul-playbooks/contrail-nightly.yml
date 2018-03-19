@@ -1,0 +1,17 @@
+- hosts: all
+  tasks:
+    - include_role:
+        name: run-devstack
+
+    - set_fact:
+        devstack_base_dir: /opt/stack
+      when: devstack_base_dir is not defined
+
+    - name: Run run_tests.h
+      shell:
+        chdir: '{{ zuul.project.src_dir }}'
+        executable: /bin/bash
+        cmd: |
+          set -e
+          set -x
+          ./run_tests.sh
