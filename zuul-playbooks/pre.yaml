@@ -1,0 +1,27 @@
+- name: Address resolution
+  hosts: all
+  become: yes
+  tasks:
+    - name: Grab real hostname
+      shell: hostname
+      register: real_hostname_output
+
+    - name: Set hostname fact
+      set_fact: real_hostname={{real_hostname_output.stdout}}
+
+    - name: Add entries to /etc/hosts
+      lineinfile:
+        dest=/etc/hosts
+        regexp="^.*{{hostvars[item].ansible_hostname}}$"
+        line="{{hostvars[item].ansible_default_ipv4.address}} {{hostvars[item].ansible_hostname}}"
+      with_items: "{{groups['all']}}"
+
+- hosts: contrail
+  tasks:
+    - name: Install contrail
+      shell:
+        executable: /bin/bash
+        cmd: |
+          set -e
+          set -x
+          ./tools/contrail_deploy.sh "{{hostvars['primary'].ansible_default_ipv4.address}}"
