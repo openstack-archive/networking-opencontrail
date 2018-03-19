@@ -19,7 +19,7 @@ import mock
 import six
 
 from neutron.tests.unit.extensions import base as test_extensions_base
-from neutron_lib.plugins import constants
+from neutron_lib import constants
 
 from networking_opencontrail.l3 import opencontrail_rt_callback
 
@@ -205,7 +205,7 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
 
         hook.update_floatingip(context, fip_id, floatingip)
 
-        l3_nat.assert_called_with(context, mock.ANY, mock.ANY)
+        l3_nat.assert_called_with(context, fip_id, floatingip)
         hook.driver.update_floatingip.assert_called_with(context,
                                                          fip_id,
                                                          mock.ANY)
