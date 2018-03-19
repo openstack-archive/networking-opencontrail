@@ -1,0 +1,13 @@
+- project:
+  check:
+    jobs:
+      - contrail-nightly
+
+- job:
+  voting: false
+  name: contrail-nightly
+  parent: legacy-dsvm-base
+  timeout: 3000
+  required-projects:
+    - openstack-infra/devstack-gate
+
