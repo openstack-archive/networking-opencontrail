@@ -1,0 +1,15 @@
+- project:
+    check:
+      jobs:
+        - contrail-integration
+
+- job:
+    voting: false
+    name: contrail-integration
+    parent: legacy-dsvm-base
+    timeout: 3000
+    nodeset: legacy-centos-7
+    required-projects:
+      - openstack-infra/devstack-gate
+    run: zuul-playbooks/contrail-nightly.yaml
+
