@@ -28,7 +28,7 @@ EOF
 	cat > ./inventory/group_vars/container_hosts.yml << EOF
 contrail_configuration:
   CONTAINER_REGISTRY: opencontrailnightly
-  CONTRAIL_VERSION: ocata-master-17
+  CONTRAIL_VERSION: latest
   CONTROLLER_NODES: $CONTRAIL_IP
   CLOUD_ORCHESTRATOR: openstack
   AUTH_MODE: keystone
@@ -78,3 +78,7 @@ install_prereq()
 install_prereq
 install_contrail
 
+echo 'Some config'
+ip route get 8.8.8.8
+echo 'Contrail networks:'
+curl "http://127.0.0.1:8082/virtual-networks"
