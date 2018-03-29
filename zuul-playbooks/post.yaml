@@ -1,0 +1,34 @@
+- name: Gather Contrail logs
+  hosts: contrail
+  become: yes
+  tasks:
+    - set_fact:
+        devstack_base_dir: /opt/stack
+      when: devstack_base_dir is not defined
+
+    - name: List running containers
+      command: 'docker ps -a --format "{% raw %}{{.Names}}{% endraw %}"'
+      register: container_list
+
+    - name: Create container logdir
+      file:
+        path: "{{ devstack_base_dir }}/logs/contrail"
+        state: directory
+
+    - name: Dump container logs
+      shell: "docker logs {{ item }} &> {{ devstack_base_dir }}/logs/contrail/{{ item }}.log"
+      with_items: "{{ container_list.stdout_lines }}"
+
+    - name: list files
+      shell:
+        chdir: '{{ zuul.project.src_dir }}'
+        executable: /bin/bash
+        cmd: |
+          find .
+
+#- name: Fetch container logs
+#synchronize:
+#src: /tmp/container_logs
+#dest: "{{ zuul.executor.log_root }}//{{ inventory_hostname }}"
+#mode: pull
+#recursive: yes
