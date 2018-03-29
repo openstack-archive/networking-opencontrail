@@ -6,7 +6,7 @@
 - nodeset:
     name: centos-7-ubuntu
     nodes:
-      - name: primary
+      - name: controller
         label: ubuntu-xenial
       - name: contrail
         label: centos-7
@@ -14,8 +14,8 @@
 - job:
     voting: false
     name: contrail-integration
-    parent: legacy-dsvm-base
-    timeout: 10800
+    parent: devstack-tempest
+    timeout: 1080
     nodeset: centos-7-ubuntu
     required-projects:
       - openstack-infra/devstack-gate
