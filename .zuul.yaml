@@ -2,11 +2,14 @@
     check:
       jobs:
         - contrail-integration
+    gate:
+      jobs:
+        - contrail-integration
 
 - nodeset:
     name: centos-7-ubuntu
     nodes:
-      - name: primary
+      - name: controller
         label: ubuntu-xenial
       - name: contrail
         label: centos-7
@@ -14,11 +17,18 @@
 - job:
     voting: false
     name: contrail-integration
-    parent: legacy-dsvm-base
+    parent: devstack-tempest
     timeout: 10800
     nodeset: centos-7-ubuntu
     required-projects:
       - openstack-infra/devstack-gate
+      - openstack/networking-opencontrail
     pre-run: zuul-playbooks/pre.yaml
-    run: zuul-playbooks/run.yaml
+    #run: zuul-playbooks/run.yaml
+    vars:
+      devstack_plugins:
+        networking-opencontrail: 'git://ct.git.openstack.org/openstack/networking-opencontrail'
+      devstack_localrc:
+        OPENCONTRAIL_APISERVER_IP: '{{hostvars['controller'].ansible_default_ipv4.address}}'
+        OPENCONTRAIL_APISERVER_PORT: 8082
 
