@@ -25,9 +25,9 @@
         cmd: |
           set -e
           set -x
-          ./tools/contrail_prepare.sh "{{hostvars['primary'].ansible_default_ipv4.address}}"
+          ./tools/contrail_prepare.sh "{{hostvars['controller'].ansible_default_ipv4.address}}"
 
-- hosts: primary
+- hosts: controller
   tasks:
     - name: Install contrail
       shell:
@@ -36,4 +36,4 @@
         cmd: |
           set -e
           set -x
-          ./tools/contrail_deploy.sh "{{hostvars['contrail'].ansible_default_ipv4.address}}" "{{hostvars['primary'].ansible_default_ipv4.address}}"
+          ./tools/contrail_deploy.sh "{{hostvars['contrail'].ansible_default_ipv4.address}}" "{{hostvars['controller'].ansible_default_ipv4.address}}"
