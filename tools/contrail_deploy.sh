@@ -28,7 +28,7 @@ EOF
 	cat > ./inventory/group_vars/container_hosts.yml << EOF
 contrail_configuration:
   CONTAINER_REGISTRY: opencontrailnightly
-  CONTRAIL_VERSION: ocata-master-17
+  CONTRAIL_VERSION: latest
   CONTROLLER_NODES: $CONTRAIL_IP
   CLOUD_ORCHESTRATOR: openstack
   AUTH_MODE: keystone
