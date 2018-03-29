@@ -1,0 +1,29 @@
+- name: Gather Contrail logs
+  hosts: contrail
+  become: yes
+     - include_role:
+        name: setup-devstack-log-dir
+    # TODO(mpeterson): Remove when https://github.com/ansible/ansible/issues/21890 is fixed
+    - set_fact:
+        devstack_base_dir: /opt/stack
+      when: devstack_base_dir is not defined tasks:
+
+    - name: List running containers
+      command: 'docker ps -a --format "{% raw %}{{.Names}}{% endraw %}"'
+      register: container_list
+
+    - name: Create container logdir
+      file:
+        path: "{{ devstack_base_dir }}/logs/contrail"
+        state: directory
+
+    - name: Dump container logs
+      shell: "docker logs {{ item }} &> {{ devstack_base_dir }}/logs/contrail/{{ item }}.log"
+      with_items: "{{ container_list.stdout_lines }}"
+
+#- name: Fetch container logs
+#synchronize:
+#src: /tmp/container_logs
+#dest: "{{ zuul.executor.log_root }}//{{ inventory_hostname }}"
+#mode: pull
+#recursive: yes
