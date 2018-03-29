@@ -1,0 +1,22 @@
+- name: List running containers
+  command: 'docker ps -a --format "{% raw %}{{.Names}}{% endraw %}"'
+  become: true
+  register: container_list
+
+- name: Create container logdir
+  file:
+    path: /tmp/container_logs
+    state: directory
+
+- name: Dump container logs
+  shell: "docker logs {{ item }} &> /tmp/container_logs/{{ item }}.log"
+  become: true
+  with_items: "{{ container_list.stdout_lines }}"
+
+- name: Fetch container logs
+  synchronize:
+    src: /tmp/container_logs
+    dest: "{{ zuul.executor.log_root }}/sanity-logs"
+    mode: pull
+    recursive: yes
+  become: true
