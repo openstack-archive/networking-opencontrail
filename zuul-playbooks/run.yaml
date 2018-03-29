@@ -11,4 +11,4 @@
         cmd: |
           set -e
           set -x
-          ./tools/run_tests.sh
+          ./tools/run_tests.sh "{{hostvars['contrail'].ansible_default_ipv4.address}}" "{{hostvars['controller'].ansible_default_ipv4.address}}" "zuul.executor.log_root"
