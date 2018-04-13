@@ -37,6 +37,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
         self.drv = drv.OpenContrailDrivers()
         self.sg_handler = (
             opencontrail_sg_callback.OpenContrailSecurityGroupHandler(self))
+        LOG.info("Initialization of networking-opencontrail plugin: COMPLETE")
 
     def create_network_precommit(self, context):
         pass
