@@ -5,4 +5,7 @@
     - set_fact:
         devstack_base_dir: /opt/stack
       when: devstack_base_dir is not defined
-          
+    - name: Execute integration testing
+      shell:
+        cmd: "tox -e integration -- {{hostvars['controller'].ansible_default_ipv4.address}} {{hostvars['contrail'].ansible_default_ipv4.address}}"
+        chdir: "{{ zuul.project.src_dir }}"
