@@ -1,34 +1,34 @@
-- name: Gather Contrail logs
-  hosts: contrail
-  become: yes
+- hosts: all
+  roles:
+    - export-devstack-journal
+    - devstack-project-conf
+    - capture-system-logs
+    - fetch-devstack-log-dir
   tasks:
-    - set_fact:
-        devstack_base_dir: /opt/stack
-      when: devstack_base_dir is not defined
-
-    - name: List running containers
-      command: 'docker ps -a --format "{% raw %}{{.Names}}{% endraw %}"'
-      register: container_list
-
-    - name: Create container logdir
-      file:
-        path: "{{ devstack_base_dir }}/logs/contrail"
-        state: directory
-
-    - name: Dump container logs
-      shell: "docker logs {{ item }} &> {{ devstack_base_dir }}/logs/contrail/{{ item }}.log"
-      with_items: "{{ container_list.stdout_lines }}"
-
-    - name: list files
-      shell:
-        chdir: '{{ devstack_base_dir }}/logs/'
-        executable: /bin/bash
-        cmd: |
-          find .
-
-    - name: Fetch container logs
+    - name: Fetch contrail logs
+      become: yes
       synchronize:
-        src: '{{ devstack_base_dir }}/logs/'
-        dest: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}"
+        src: "/var/log/contrail"
+        dest: "{{ zuul.executor.log_root }}/controller/logs"
+        mode: pull
+    - name: Fetch contrail-ansible-deployer config files
+      become: yes
+      synchronize:
+        src: "/home/zuul/contrail-ansible-deployer/{{ item }}"
+        dest: "{{ zuul.executor.log_root }}/controller/logs/contrail/{{ item }}"
         mode: pull
         recursive: yes
+      with_items:
+        - "config"
+        - "inventory"
+    - name: Fetch docker config files
+      become: yes
+      synchronize:
+        src: "/etc/docker"
+        dest: "{{ zuul.executor.log_root }}/controller/logs"
+        mode: pull
+    - name: List running containers
+      register: running_containers_list
+      shell: "docker ps --format={% raw %}'{{.Names}}: {{.Status}}'{% endraw %}"
+    - debug:
+      msg: "{{ running_containers_list.stdout | from_json }}"
