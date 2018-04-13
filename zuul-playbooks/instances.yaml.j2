@@ -1,0 +1,43 @@
+provider_config:
+  bms:
+    ssh_user: zuul
+    ssh_public_key: "{{ zuul.executor.work_root }}/{{ zuul.build }}_id_rsa.pub"
+    ssh_private_key: "{{ zuul.executor.work_root }}/{{ zuul.build }}_id_rsa"
+    ntpserver: 0.pl.pool.ntp.org
+    nameserer: 8.8.8.8
+
+instances:
+  bms1:
+    provider: bms
+    ip: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+    roles:
+      config_database:
+      config:
+      control:
+      vrouter:
+      openstack:
+      openstack_compute:
+
+global_configuration:
+  CONTAINER_REGISTRY: opencontrailnightly
+
+contrail_configuration:
+  CONTRAIL_VERSION: ocata-master-105
+  CLOUD_ORCHESTRATOR: openstack
+  LOG_LEVEL: SYS_DEBUG
+  AAA_MODE: no-auth
+  AUTH_MODE: keystone
+  VROUTER_GATEWAY: "{{hostvars['controller'].ansible_default_ipv4.gateway}}"
+  PHYSICAL_INTERFACE: "{{hostvars['controller'].ansible_default_ipv4.interface}}"
+  KEYSTONE_AUTH_ADMIN_PASSWORD: admin
+  KEYSTONE_AUTH_HOST: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+  KEYSTONE_AUTH_URL_VERSION: /v3
+  RABBITMQ_NODE_PORT: 5673
+  UPDATE_IMAGES: true
+  UPGRADE_KERNEL: true
+  CONTROLLER_NODES: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+  CONTROL_NODES: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+  CONFIGDB_NODES: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+  CONFIG_NODES: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+  CONFIG_NODEMGR__DEFAULTS__minimum_diskGB: 2
+  JVM_EXTRA_OPTS: "-Xms1g -Xmx2g"

@@ -1,8 +1,98 @@
-- hosts: controller
+- hosts: all:
   tasks:
-    - include_role:
-          name: orchestrate-devstack
+    - name: Install required utilities
+      become: yes
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - yum-utils
+        - epel-release
+        - device-mapper-persistent-data
+        - lvm2
+        - python-devel
+        - python-pip
+        - gcc
+        - git
+        - patch
+        - ansible-2.4.*
+    - name: Add docker-ce repository
+      become: yes
+      shell: |
+        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    - name: Install docker
+      become: yes
+      yum:
+        name: docker-ce
+        state: present
+    - name: Start docker daemon
+      become: yes
+      service:
+        name: docker
+        state: running
+        enabled: yes
+    - name: Install docker and docker-compose python packages
+      become: yes
+      pip:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - docker-py==1.10.6
+        - docker-compose==1.9.0
+    - name: update kernel
+      yum:
+        name: kernel
+        state: latest
+    - name: Clone contrail-ansible-deployer repository
+      git:
+        clone: yes
+        force: yes
+        dest: ~/contrail-ansible-deployer
+        repo: https://github.com/Juniper/contrail-ansible-deployer.git
+    # due to bug in contrail-ansible-deployer it is required to clone this repo
+    # even if it isn't used.
+    - name: Clone contrail-kolla-ansible repository
+      git:
+        clone: yes
+        force: yes
+        dest: ~/contrail-kolla-ansible
+        repo: https://github.com/Juniper/contrail-kolla-ansible.git
+    - name: Update hosts file
+      template:
+        src: hosts.j2
+        dest: ~/contrail-ansible-deployer/inventory/hosts
+    - name: Update instances.yaml file
+      template:
+        src: instances.yaml.j2
+        dest: ~/contrail-ansible-deployer/config/instances.yaml
+    - name: Provision Node before deploy contrail
+      shell: |
+        set -e
+        set -x
+        cd ~/contrail-ansible-deployer/
+        sudo ansible-playbook -vv \
+                              -e skip_openstack=true \
+                              -i inventory/ playbooks/configure_instances.yml
+    - name: Deploy OpenContrail
+      shell: |
+        set -e
+        set -x
+        cd ~/contrail-ansible-deployer/
+        sudo ansible-playbook -vv \
+                              -e skip_openstack=true \
+                              -e '{"CREATE_CONTAINERS":true}' \
+                              -e orchestrator=openstack \
+                              -i inventory/ playbooks/install_contrail.yml
+    - name: Wait for contrail until fully running
+      wait_for:
+        sleep: 5
+        host: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+        port: 8082
+        timeout: 300
     - set_fact:
-        devstack_base_dir: /opt/stack
+      devstack_base_dir: /opt/stack
       when: devstack_base_dir is not defined
-          
+    - name: Execute integration testing
+      shell:
+        cmd: "tox -e integration -- {{hostvars['controller'].ansible_default_ipv4.address}} {{hostvars['controller'].ansible_default_ipv4.address}}"
+        chdir: "{{ zuul.project.src_dir }}"
