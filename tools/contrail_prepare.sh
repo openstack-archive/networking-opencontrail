@@ -1,6 +1,8 @@
 #!/bin/bash
 
 echo "RUN: $0 with args $*"
+uname -a
+uname -r
 
 OPENSTACK_IP="$1"
 echo "OpenStack IP = $OPENSTACK_IP"
