@@ -55,12 +55,16 @@ jinja2_extensions=jinja2.ext.do
 EOF
 
 	echo "Start ANSIBLE deployment"
-	echo hosts
+	echo '-> Hosts file:'
 	cat ./inventory/hosts
-	echo container_host
+	echo '-> container_hosts.yml file:'
 	cat ./inventory/group_vars/container_hosts.yml
 
-	ansible-playbook -e '{"CREATE_CONTAINERS":true}' -i inventory/ playbooks/deploy.yml
+	#ansible-playbook -e '{"CREATE_CONTAINERS":true}' -i inventory/ playbooks/deploy.yml
+
+	echo '-> Run ansible...'
+	ansible-playbook -i inventory/ playbooks/provision_instances.yml
+	ansible-playbook -e '{"CREATE_CONTAINERS":true}' -e orchestrator=none -i inventory/ playbooks/install_contrail.yml
 }
 
 install_prereq()
