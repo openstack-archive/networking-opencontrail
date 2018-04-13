@@ -5,4 +5,16 @@
     - set_fact:
         devstack_base_dir: /opt/stack
       when: devstack_base_dir is not defined
-          
+    - name: Install contrail
+      shell:
+        chdir: '{{ zuul.project.src_dir }}'
+        executable: /bin/bash
+        cmd: |
+          set -e
+          set -x
+          ./tools/contrail_deploy.sh "{{hostvars['contrail'].ansible_default_ipv4.address}}" "{{hostvars['controller'].ansible_default_ipv4.address}}"
+    - name: Execute integration testing
+      shell:
+        cmd: "tox -e integration -- {{hostvars['controller'].ansible_default_ipv4.address}} {{hostvars['contrail'].ansible_default_ipv4.address}}"
+        chdir: "{{ zuul.project.src_dir }}"
+
