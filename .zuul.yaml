@@ -23,6 +23,7 @@
     required-projects:
       - openstack-infra/devstack-gate
       - openstack/networking-opencontrail
+      - openstack/keystoneauth
     pre-run: zuul-playbooks/pre.yaml
     run: zuul-playbooks/run.yaml
     post-run: zuul-playbooks/post.yaml
