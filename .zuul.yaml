@@ -23,6 +23,7 @@
     required-projects:
       - openstack-infra/devstack-gate
       - openstack/networking-opencontrail
+      - openstack/keystoneauth
     pre-run: zuul-playbooks/pre.yaml
     run: zuul-playbooks/run.yaml
     post-run: zuul-playbooks/post.yaml
@@ -34,6 +35,20 @@
         OPENCONTRAIL_APISERVER_PORT: 8082
         Q_USE_SECGROUP: True
         Q_PLUGIN: ml2
-        ML2_L3_PLUGIN: opencontrail-router
+        #ML2_L3_PLUGIN: opencontrail-router
         NEUTRON_CREATE_INITIAL_NETWORKS: False
+      devstack_local_conf:
+        post-config:
+          $NEUTRON_CONF:
+            DEFAULT:
+              service_plugins: neutron.services.l3_router.l3_router_plugin.L3RouterPlugin
+          "/$NEUTRON_CORE_PLUGIN_CONF":
+            ml2:
+              type_drivers: local,flat,vlan,gre,vxlan
+            ml2_type_vlan:
+              network_vlan_ranges: spock:100:200
+            ml2_type_vxlan:
+              vni_ranges: 1001:2000
+            ml2_type_gre:
+              tunnel_id_ranges: 1:1000
 
