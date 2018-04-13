@@ -15,7 +15,7 @@
         path: "{{ devstack_base_dir }}/logs/contrail"
         state: directory
 
-    - name: Dump container logs
+    - name: Dump container logs (log)
       shell: "docker logs {{ item }} &> {{ devstack_base_dir }}/logs/contrail/{{ item }}.log"
       with_items: "{{ container_list.stdout_lines }}"
 
