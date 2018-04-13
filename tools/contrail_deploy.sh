@@ -60,7 +60,10 @@ EOF
 	echo container_host
 	cat ./inventory/group_vars/container_hosts.yml
 
-	ansible-playbook -e '{"CREATE_CONTAINERS":true}' -i inventory/ playbooks/deploy.yml
+	#ansible-playbook -e '{"CREATE_CONTAINERS":true}' -i inventory/ playbooks/deploy.yml
+
+	ansible-playbook -i inventory/ playbooks/provision_instances.yml
+	ansible-playbook -e '{"CREATE_CONTAINERS":true}' -e orchestrator=none -i inventory/ playbooks/install_contrail.yml
 }
 
 install_prereq()
