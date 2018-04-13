@@ -5,4 +5,7 @@
     - set_fact:
         devstack_base_dir: /opt/stack
       when: devstack_base_dir is not defined
-          
+    - name: Execute integration testing
+      shell:
+        cmd: "tox -e integration"
+        chdir: "{{ zuul.project.src_dir }}"
