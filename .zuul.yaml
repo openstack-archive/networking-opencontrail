@@ -7,33 +7,49 @@
         - contrail-integration
 
 - nodeset:
-    name: centos-7-ubuntu
+    name: centos-7-aio
     nodes:
       - name: controller
-        label: ubuntu-xenial
-      - name: contrail
         label: centos-7
 
 - job:
-    voting: false
     name: contrail-integration
     parent: devstack-tempest
+    nodeset: centos-7-aio
+    voting: false
     timeout: 10800
-    nodeset: centos-7-ubuntu
-    required-projects:
-      - openstack-infra/devstack-gate
-      - openstack/networking-opencontrail
     pre-run: zuul-playbooks/pre.yaml
     run: zuul-playbooks/run.yaml
     post-run: zuul-playbooks/post.yaml
+    required-projects:
+      - openstack-dev/devstack
+      - openstack/networking-opencontrail
+    roles:
+      - zuul: openstack-dev/devstack
     vars:
+      run_devstack: True
       devstack_plugins:
-        networking-opencontrail: 'git://git.openstack.org/openstack/networking-opencontrail'
+        networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
       devstack_localrc:
-        OPENCONTRAIL_APISERVER_IP: "'{{hostvars['contrail'].ansible_default_ipv4.address}}'"
+        HOST_IP: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+        OPENCONTRAIL_APISERVER_IP: "{{hostvars['controller'].ansible_default_ipv4.address}}"
         OPENCONTRAIL_APISERVER_PORT: 8082
         Q_USE_SECGROUP: True
         Q_PLUGIN: ml2
         ML2_L3_PLUGIN: opencontrail-router
         NEUTRON_CREATE_INITIAL_NETWORKS: False
-
+        disable_service: n-net c-sch c-api c-vol dstat tempest
+      devstack_local_conf:
+        post-config:
+          "/$NEUTRON_CORE_PLUGIN_CONF":
+            ml2:
+              type_drivers: local,flat,vlan,gre,vxlan,geneve
+              tenant_network_types: vlan
+              extension_drivers: port_security
+              mechanism_drivers: opencontrail,openvswitch,linuxbridge
+            ml2_type_vlan:
+              network_vlan_ranges: public:1:1000
+            ml2_type_vxlan:
+              vni_ranges: 1:1000
+            ml2_type_gre:
+              tunnel_id_ranges: 1:1000

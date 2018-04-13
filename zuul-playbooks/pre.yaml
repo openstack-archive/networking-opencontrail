@@ -1,32 +1,8 @@
-- name: Address resolution
-  hosts: all
-  become: yes
+- hosts: all
   tasks:
-    - name: Add IP address of all hosts to all hosts
-      lineinfile:
-        dest: /etc/hosts
-        line: "{{ hostvars[item].ansible_host }} {{ hostvars[item].inventory_hostname }} {{ hostvars[item].inventory_hostname_short }}"
-        state: present
-      with_items: "{{ groups.all }}"
-
-- hosts: contrail
-  tasks:
-    - name: Prepare contrail
-      shell:
-        chdir: '{{ zuul.project.src_dir }}'
-        executable: /bin/bash
-        cmd: |
-          set -e
-          set -x
-          ./tools/contrail_prepare.sh "{{hostvars['controller'].ansible_default_ipv4.address}}"
-
-- hosts: controller
-  tasks:
-    - name: Install contrail
-      shell:
-        chdir: '{{ zuul.project.src_dir }}'
-        executable: /bin/bash
-        cmd: |
-          set -e
-          set -x
-          ./tools/contrail_deploy.sh "{{hostvars['contrail'].ansible_default_ipv4.address}}" "{{hostvars['controller'].ansible_default_ipv4.address}}"
+    - name: Add IP and local domain to hosts
+      shell: |
+        set -e
+        set -x
+        ip route get 8.8.8.8 | awk 'NR==1 {print $NF}' | tr '\n' ' ' | sudo tee -a /etc/hosts
+        hostname | sudo tee -a /etc/hosts

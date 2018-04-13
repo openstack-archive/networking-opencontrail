@@ -1,0 +1,4 @@
+container_hosts:
+  hosts:
+    {{ hostvars['contrail'].ansible_default_ipv4.address }}:
+      ansible_user: centos
