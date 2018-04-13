@@ -13,27 +13,47 @@ ping -c 4 "$CONTRAIL_IP"
 install_contrail()
 {
 	cd
+	echo "HOME is $PWD"
 	git clone http://github.com/Juniper/contrail-ansible-deployer
 	cd contrail-ansible-deployer
-	cat > ./inventory/hosts << EOF
-container_hosts:
-  hosts:
-    $CONTRAIL_IP:
-EOF
+
 	cat > ./inventory/hosts << EOF
 [container_hosts]
 $CONTRAIL_IP
 EOF
 
-	cat > ./inventory/group_vars/container_hosts.yml << EOF
-contrail_configuration:
+	cat > ./config/instances.yaml << EOF
+instances:
+  ins1:
+    provider: bms
+    ip: $CONTRAIL_IP
+    roles:
+      configdb:
+	 config_database:
+	 config:
+	 control:
+	 webui:
+	 analytics:
+	 analyticsdb:
+	 analytics_database:
+	 vrouter:
+      openstack_compute:
+
+global_configuration:
   CONTAINER_REGISTRY: opencontrailnightly
+
+contrail_configuration:
   CONTRAIL_VERSION: latest
   CONTROLLER_NODES: $CONTRAIL_IP
-  CLOUD_ORCHESTRATOR: openstack
   AUTH_MODE: keystone
   KEYSTONE_AUTH_ADMIN_PASSWORD: admin
   KEYSTONE_AUTH_HOST: $OPENSTACK_IP
+  CONTROL_NODES: $CONTRAIL_IP
+  ANALYTICSDB_NODES: $CONTRAIL_IP
+  WEBUI_NODES: $CONTRAIL_IP
+  ANALYTICS_NODES: $CONTRAIL_IP
+  CONFIGDB_NODES: $CONTRAIL_IP
+  CONFIG_NODES: $CONTRAIL_IP
 roles:
   $CONTRAIL_IP:
     configdb:
@@ -46,6 +66,7 @@ roles:
     analytics_database:
     vrouter:
 EOF
+ln -sf ./instances.yaml ./config/instances.yml
 
 	cat > ansible.cfg << EOF
 [defaults]
@@ -55,12 +76,20 @@ jinja2_extensions=jinja2.ext.do
 EOF
 
 	echo "Start ANSIBLE deployment"
-	echo hosts
+	echo '-> Hosts file:'
 	cat ./inventory/hosts
-	echo container_host
-	cat ./inventory/group_vars/container_hosts.yml
+	echo '-> instances.yml file:'
+	cat ./config/instances.yml
+	echo '-> instances.yaml file:'
+	cat ./config/instances.yaml
 
-	ansible-playbook -e '{"CREATE_CONTAINERS":true}' -i inventory/ playbooks/deploy.yml
+	echo '-> Run ansible (provision_instances)...'
+	ansible-playbook -e skip_openstack=true -i inventory/ playbooks/provision_instances.yml
+
+	[ $? -ne 0 ] && { echo "-> Provision instances fail, aborting - will not install contrail"; exit 2; }
+	echo '-> Run ansible (install_contrail)...'
+	ansible-playbook -e skip_openstack=true -e '{"CREATE_CONTAINERS":true}' -e orchestrator=none -i inventory/ playbooks/install_contrail.yml
+	echo '-> DONE!'
 }
 
 install_prereq()
