@@ -54,13 +54,26 @@ host_key_checking = False
 jinja2_extensions=jinja2.ext.do
 EOF
 
-	echo "Start ANSIBLE deployment"
-	echo hosts
-	cat ./inventory/hosts
-	echo container_host
-	cat ./inventory/group_vars/container_hosts.yml
 
-	ansible-playbook -e '{"CREATE_CONTAINERS":true}' -i inventory/ playbooks/deploy.yml
+	sudo cp -f ./instances.yml ./config/instances.yaml
+
+	echo "Start ANSIBLE deployment"
+	echo '-> Hosts file:'
+	cat ./inventory/hosts
+	echo '-> container_hosts.yml file:'
+	cat ./inventory/group_vars/container_hosts.yml
+	echo '-> instances.yml file:'
+	cat ./instances.yml
+
+	#ansible-playbook -e '{"CREATE_CONTAINERS":true}' -i inventory/ playbooks/deploy.yml
+
+	echo '-> Run ansible (provision_instances)...'
+	ansible-playbook -e '{"instances":{"ins1":{"provider": "gce"}}}' -e skip_openstack=true -i inventory/ playbooks/provision_instances.yml
+
+	[ $? -ne 0 ] && { echo "-> Provision instances fail, aborting - will not install contrail"; exit 2; }
+	echo '-> Run ansible (install_contrail)...'
+	ansible-playbook -e '{"instances":{"ins1":{"provider": "gce"}}}'  -e skip_openstack=true -e '{"CREATE_CONTAINERS":true}' -e orchestrator=none -i inventory/ playbooks/install_contrail.yml
+	echo '-> DONE!'
 }
 
 install_prereq()
