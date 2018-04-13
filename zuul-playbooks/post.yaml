@@ -15,7 +15,7 @@
         path: "{{ devstack_base_dir }}/logs/contrail"
         state: directory
 
-    - name: Dump container logs
+    - name: Dump container logs (log)
       shell: "docker logs {{ item }} &> {{ devstack_base_dir }}/logs/contrail/{{ item }}.log"
       with_items: "{{ container_list.stdout_lines }}"
 
@@ -32,3 +32,24 @@
         dest: "{{ zuul.executor.log_root }}/{{ inventory_hostname }}"
         mode: pull
         recursive: yes
+
+    - name: Fetch /var/log/contrail logs
+      synchronize:
+        src: '/var/log/contrail'
+        dest: "{{ zuul.executor.log_root }}/var-log-contrail"
+        mode: pull
+        recursive: yes
+
+- name: Gather contrail-ansible-deployer logs
+  hosts: controller
+  become: yes
+  tasks:
+    - name: Fetch contrail-ansible-deployer instances file
+      synchronize:
+        src: "{{ ansible_env.HOME }}/contrail-ansible-deployer/{{ item }}"
+        dest: "{{ zuul.executor.log_root }}/contrail-ansible-deployer/{{ item }}"
+        mode: pull
+      with_items:
+        - "config/instances.yaml"
+        - "inventory/hosts"
+        - "ansible.cfg"
