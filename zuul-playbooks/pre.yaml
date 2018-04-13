@@ -30,3 +30,10 @@
           set -e
           set -x
           ./tools/contrail_deploy.sh "{{hostvars['contrail'].ansible_default_ipv4.address}}" "{{hostvars['controller'].ansible_default_ipv4.address}}"
+    - name: Wait for contrail until fully running
+      wait_for:
+        sleep: 5
+        host: "{{hostvars['contrail'].ansible_default_ipv4.address}}"
+        port: 8082
+        timeout: 300
+
