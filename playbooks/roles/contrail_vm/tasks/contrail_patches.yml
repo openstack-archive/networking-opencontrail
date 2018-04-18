@@ -10,6 +10,11 @@
     src: ../files/plugin.patch
     dest: ~/devstack/plugin.patch
 
+- name: copy contrail_plugin_diff.patch
+  copy:
+    src: ../files/contrail_plugin_diff.patch
+    dest: ~/devstack/contrail_plugin_diff.patch
+
 - name: copy contrail_config.patch
   copy:
     src: ../files/contrail_config.patch
