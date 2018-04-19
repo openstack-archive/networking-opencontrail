@@ -293,7 +293,7 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
 
     @log_helpers.log_method_call
     def disassociate_floatingips(self, context, port_id, do_notify=True):
-        session = db_api.get_session()
+        session = db_api.get_writer_session()
 
         try:
             with session.begin(subtransactions=True):
