@@ -111,6 +111,10 @@ class OpenContrailDrivers(driver_base.OpenContrailDriversBase):
             self._use_api_certs = True
 
     def _request_api_server(self, url, data=None, headers=None):
+        LOG.debug("Api-Server request:\n"
+                  "URL: %(url)s\nHeaders: %(heads)s\nPayload: %(payload)s\n",
+                  {'url': url, 'heads': headers, 'payload': data})
+
         # Attempt to post to Api-Server
         if self._apiinsecure:
             response = requests.post(url, data=data,
@@ -150,6 +154,12 @@ class OpenContrailDrivers(driver_base.OpenContrailDriversBase):
                 response = self._request_api_server(url, data, auth_headers)
             else:
                 raise RuntimeError('Authentication Failure')
+
+        LOG.debug("Api-Server response:\n"
+                  "Status: %(status)s\nPayload: %(payload)s\n",
+                  {'status': response.status_code,
+                   'payload': response.content})
+
         return response
 
     def _request_api_server_authn(self, url, data=None, headers=None):
