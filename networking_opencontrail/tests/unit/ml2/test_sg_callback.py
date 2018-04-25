@@ -15,8 +15,8 @@
 
 import mock
 
-from neutron_lib.callbacks import events
-from neutron_lib.callbacks import resources
+from neutron.callbacks import events
+from neutron.callbacks import resources
 
 from neutron.tests.unit import testlib_api
 
