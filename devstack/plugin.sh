@@ -14,6 +14,9 @@ function configure_opencontrail() {
     iniset $OPENCONTRAIL_ML2_CONF_FILE APISERVER api_server_ip $OPENCONTRAIL_APISERVER_IP
     iniset $OPENCONTRAIL_ML2_CONF_FILE APISERVER api_server_port $OPENCONTRAIL_APISERVER_PORT
 
+    if [ -n "${OPENCONTRAIL_AUTH_TOKEN_URL+x}" ]; then
+        iniset $OPENCONTRAIL_ML2_CONF_FILE APISERVER auth_token_url $OPENCONTRAIL_AUTH_TOKEN_URL
+    fi
     if [ -n "${OPENCONTRAIL_USE_SSL+x}" ]; then
         iniset $OPENCONTRAIL_ML2_CONF_FILE APISERVER use_ssl $OPENCONTRAIL_USE_SSL
     fi
