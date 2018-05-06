@@ -24,7 +24,14 @@
      OPENCONTRAIL_APISERVER_IP=<ip address>
      OPENCONTRAIL_APISERVER_PORT=<port-number>
 
-5. Optionally, if you need to use secure SSL connection, specify additional
+5. Optionally, if you want to use Identity API v3 for Keystone, specify additional variable
+   as below:
+
+     > cat local.conf
+     [[local|localrc]]
+     OPENCONTRAIL_AUTH_TOKEN_URL=<auth url>
+
+6. Optionally, if you need to use secure SSL connection, specify additional
    configuration variables as below::
 
      > cat local.conf
@@ -35,4 +42,4 @@
      OPENCONTRAIL_KEY_FILE=<Key file>
      OPENCONTRAIL_CA_FILE=<ca file>
 
-6. run ``stack.sh``
+7. run ``stack.sh``
