@@ -1,9 +1,9 @@
 if ! [[ "$Q_ML2_PLUGIN_MECHANISM_DRIVERS" =~ "opencontrail" ]]; then
-    Q_ML2_PLUGIN_MECHANISM_DRIVERS="$Q_ML2_PLUGIN_MECHANISM_DRIVERS,opencontrail"
+    Q_ML2_PLUGIN_MECHANISM_DRIVERS="opencontrail,$Q_ML2_PLUGIN_MECHANISM_DRIVERS"
 fi
 
 if ! [[ "$Q_SERVICE_PLUGIN_CLASSES" =~ "opencontrail-router" ]]; then
-    Q_SERVICE_PLUGIN_CLASSES="$Q_SERVICE_PLUGIN_CLASSES,opencontrail-router"
+    Q_SERVICE_PLUGIN_CLASSES="opencontrail-router,$Q_SERVICE_PLUGIN_CLASSES"
 fi
 
 OPENCONTRAIL_DIR=${OPENCONTRAIL_DIR:-$DEST/networking-opencontrail}
