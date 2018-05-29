@@ -1,3 +1,4 @@
 #!/usr/bin/env ansible-playbook
 
-- include: env.yml
+- include: devstack_deployer.yml
+- include: contrail_deployer.yml

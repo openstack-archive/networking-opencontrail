@@ -1,0 +1,209 @@
+- hosts: contrail
+  tasks:
+#    - name: change password
+#      become: yes
+#      shell: echo "centos:uberpass1" | chpasswd
+#    - name: Remove existing docker
+#      become: yes
+#      yum:
+#        name: "{{ item }}"
+#        state: removed
+#      with_items:
+#        - docker
+#        - docker-common
+#        - docker-selinux
+#        - docker-engine
+    - name: Install required utilities
+      become: yes
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - yum-utils
+        - epel-release
+        - device-mapper-persistent-data
+        - lvm2
+        - python-devel
+        - gcc
+        - git
+        - curl
+        - wget
+        - patch
+        - ansible-2.4.*
+
+    - name: update kernel
+      become: yes
+      yum:
+        name: kernel
+        state: latest
+      register: update_kernel
+
+    - name: Reboot the machine
+      become: yes
+      shell: nohup bash -c "sleep 2s && shutdown -r now" &
+      when: update_kernel.changed
+      register: reboot_machine
+
+    - name: Wait for machine to come back
+      wait_for_connection:
+        timeout: 240
+        delay: 10
+      when: reboot_machine.changed
+
+    - name: Fetch devstack
+      git:
+        repo: "https://github.com/openstack-dev/devstack.git"
+        dest: ~/devstack
+        version: "{{ openstack_branch }}"
+        accept_hostkey: yes
+        force: yes
+
+    - name: Fetch devstack requirements
+      become: yes
+      git:
+        repo: "git://git.openstack.org/openstack/requirements.git"
+        dest: /opt/stack/requirements
+        version: "{{ openstack_branch }}"
+        accept_hostkey: yes
+        force: yes
+
+    # If there are any problems with libvirt, then the version of libvirt should be upgraded in devstack requirements.
+    #
+    # The version of libvirt-python must be the same as, or newer than the version of the libvirt C library you're building against.
+    # source: https://www.redhat.com/archives/libvirt-users/2017-September/msg00003.html
+    # Since 2018-05-10 the newest libvirt package for centos7 is 3.9.0
+    # Alternatively install libvirt 2.5.0 and lock package, so yum can't update it https://www.tecmint.com/yum-lock-disable-blacklist-certain-package-update-version/
+    - name: Fix libvirt version
+      become: yes
+      shell: sed -i 's/libvirt-python===2.5.0/libvirt-python===3.9.0/' /opt/stack/requirements/upper-constraints.txt
+
+    - name: Put local.conf
+      template:
+        src: compute_local.conf.j2
+        dest: ~/devstack/local.conf
+
+    - name: optionally unstack
+      command: chdir=~/devstack ./unstack.sh
+      ignore_errors: yes
+
+    - name: build OpenStack via stack.sh
+      command: chdir=~/devstack ./stack.sh
+      ignore_errors: no
+
+    - name: Add docker-ce repository
+      become: yes
+      shell: |
+        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    - name: Install docker
+      become: yes
+      yum:
+        name: docker-ce
+        state: present
+     # Optional - uncomment if you have conflict between docker network subnet and your local network subnet
+#    - name: Change docker bip
+#      become: yes
+#      shell: |
+#        mkdir -p /etc/docker
+#        echo '{"bip": "10.255.0.1/16"}' > /etc/docker/daemon.json
+    - name: Start docker daemon
+      become: yes
+      service:
+        name: docker
+        state: running
+        enabled: yes
+    - name: Add user to docker group
+      become: yes
+      user:
+        name: centos
+        groups: docker
+        append: yes
+    - name: Install PIP
+      become: yes
+      yum:
+        name: python-pip
+        state: present
+    - name: install docker and docker-compose for python
+      pip:
+        name: "{{ item }}"
+        state: present
+        extra_args: --user
+      with_items:
+        - docker-py==1.10.6
+        - docker-compose==1.9.0
+    # Dirty ugly workaround on contrail-ansible-deployer not using 'become' in playbooks
+    - name: Create directories for contrail
+      shell: |
+        set -e
+        set -x
+        sudo mkdir -p /var/log/contrail
+        sudo mkdir -p /etc/contrail
+        sudo chmod 777 /var/log/contrail /etc/contrail
+
+    # Contrail Ansible Deployer
+    - name: Create ssh key and add to authorized_key for centos user
+      shell: |
+        set -e
+        set -x
+        yes | ssh-keygen -t rsa -N '' -f ~/.ssh/centos_rsa
+        cat ~/.ssh/centos_rsa.pub | tee --append ~/.ssh/authorized_keys
+        chmod 700 ~/.ssh
+        chmod 600 ~/.ssh/centos_rsa ~/.ssh/authorized_keys
+    - name: Clone 'contrail-ansible-deployer' repository
+      git:
+        clone: yes
+        force: yes
+        dest: ~/contrail-ansible-deployer
+        repo: https://github.com/Juniper/contrail-ansible-deployer.git
+    - name: Clone 'contrail-kolla-ansible' repository
+      git:
+        clone: yes
+        dest: ~/contrail-kolla-ansible
+        repo: https://github.com/Juniper/contrail-kolla-ansible.git
+    - name: Checkout 'contrail-ansible-deployer' repository
+      shell: |
+        cd ~/contrail-ansible-deployer
+        git checkout 38a0b84ec7a5f4c2a1b8b8c9c36b007dc8477b1f
+    - name: Update hosts file
+      template:
+        src: hosts.j2
+        dest: ~/contrail-ansible-deployer/inventory/hosts
+    - name: Update instances.yaml file
+      template:
+        src: instances.yaml.j2
+        dest: ~/contrail-ansible-deployer/config/instances.yaml
+    - name: Provision Node before deploy contrail
+      shell: |
+        set -e
+        set -x
+        cd ~/contrail-ansible-deployer/
+        ansible-playbook -vv \
+                         -e skip_openstack=true \
+                         -e config_file=~/contrail-ansible-deployer/config/instances.yaml \
+                         -i inventory/ playbooks/configure_instances.yml
+    - name: Deploy OpenContrail
+      shell: |
+        set -e
+        set -x
+        cd ~/contrail-ansible-deployer/
+        ansible-playbook -vv \
+                         -e skip_openstack=true \
+                         -e config_file=~/contrail-ansible-deployer/config/instances.yaml \
+                         -e '{"CREATE_CONTAINERS":true}' \
+                         -e orchestrator=openstack \
+                         -i inventory/ playbooks/install_contrail.yml
+    - name: Wait for contrail until fully running
+      wait_for:
+        sleep: 5
+        host: "{{ contrail_ip }}"
+        port: 8082
+        timeout: 300
+
+    - name: Copy vrouter
+      become: yes
+      shell: |
+        docker cp vrouter_vrouter-agent_1:/usr/bin/vrouter-port-control /usr/bin/
+
+- hosts: openstack
+  tasks:
+    - name: discover hosts
+      shell: nova-manage cell_v2 discover_hosts

@@ -1,0 +1,20 @@
+- hosts: openstack
+  tasks:
+#    - name: change password
+#      become: yes
+#      shell: echo "ubuntu:uberpass1" | chpasswd
+    - name: Fetch devstack
+      git:
+        repo: "https://github.com/openstack-dev/devstack.git"
+        dest: ~/devstack
+        version: "{{ openstack_branch }}"
+        accept_hostkey: yes
+        force: yes
+    - name: Put local.conf
+      template:
+        src: controller_local.conf.j2
+        dest: ~/devstack/local.conf
+    - name: stack.sh
+      shell: ./unstack.sh; ./stack.sh
+      args:
+        chdir: ~/devstack

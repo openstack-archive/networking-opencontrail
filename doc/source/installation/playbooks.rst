@@ -20,13 +20,13 @@ Before you run playbooks perform the following steps:
 
 Let's assume there are two hosts:
 
-+-----------+--------------+----------------+--------------+------------------------------------+
-| Node      | OS           | Public IP      | Internal IP  | Notes                              |
-+===========+==============+================+==============+====================================+
-| openstack | Ubuntu 16.04 | 10.100.0.3     | 192.168.0.3  | setup by playbooks                 |
-+-----------+--------------+----------------+--------------+------------------------------------+
-| contrail  | CentOS 7.4   | 10.100.0.2     | 192.168.0.2  | setup by contrail-ansible-deployer |
-+-----------+--------------+----------------+--------------+------------------------------------+
++-----------+--------------+--------------------------+------------+-------------+------------------------------------+
+| Node      | OS           | Recommended requirements | Public IP  | Internal IP | Notes                              |
++===========+==============+==========================+============+=============+====================================+
+| openstack | Ubuntu 16.04 | RAM: 8 GB                | 10.100.0.3 | 192.168.0.3 | devstack (controller node)         |
++-----------+--------------+--------------------------+------------+-------------+------------------------------------+
+| contrail  | CentOS 7.4   | RAM: 16 GB               | 10.100.0.2 | 192.168.0.2 | devstack (compute node) + contrail |
++-----------+--------------+--------------------------+------------+-------------+------------------------------------+
 
 **2. Make sure you have key-based SSH access to prepared nodes**
 
@@ -54,10 +54,6 @@ Configuration require editing few files before running any playbook.
 
 **1. Define nodes by specifying SSH names or IP of machines in ``playbooks/hosts``**
 
-.. code-block:: console
-
-    $ vim playbooks/hosts
-
 Change ``contrail-node`` and ``openstack-node`` to public IP of your machines.
 
 .. code-block:: text
@@ -70,60 +66,36 @@ Change ``contrail-node`` and ``openstack-node`` to public IP of your machines.
 
 **2. Change deployment variables in ``playbooks/group_vars/all.yml``**
 
-.. code-block:: console
-
-    $ vim playbooks/group_vars/all.yml
-
 ``contrail_ip`` and ``openstack_ip`` should be internal IP addresses.
+``contrail_gateway`` should be gateway address of the contrail_ip.
+``contrail_interface`` should be interface name that has bound contrail ip.
 
 ``openstack_branch`` should be set to ``stable/ocata``
-``contrail_branch`` is currently ignored but it must not be empty.
-
-Example config:
 
 .. code-block:: yaml
 
-    # [Required] IP address for OpenConrail VM.
+    # IP address for OpenConrail.
     contrail_ip: 192.168.0.2
-    # [Required] IP address for Openstack VM.
+
+    # Gateway address for OpenConrail.
+    contrail_gateway: 192.168.0.1
+
+    # Interface name for OpenConrail.
+    contrail_interface: eth0
+
+
+    # IP address for Openstack VM.
     openstack_ip: 192.168.0.3
 
-    # [Required] Openstack branch used on VMs.
+    # Openstack branch used on VMs.
     openstack_branch: stable/ocata
-    # [Required] OpenContrail branch to build on VM.
-    contrail_branch: R4.1
-
-    # [Required] Kernel version supported by OpenContrail branch.
-    kernel_version: 4.4.0-112
-
-**3. Enable networking-opencontrail plugin**
-
-Update ``openstack_local.conf.j2`` template.
-
-.. code-block:: console
-
-    $ vim playbooks/roles/fetch_devstack/templates/openstack_local.conf.j2
-
-.. warning:: If plugin is already defined,
-             make sure URL and branch version is correct.
-
-At the end of file add new line with ``enable_plugin`` directive.
-
-.. code-block:: text
-
-    enable_plugin networking-opencontrail https://github.com/openstack/networking-opencontrail stable/ocata
-
-.. note:: Plugin branch should be the same as OpenStack.
-          For example if openstack_branch is ``stable/ocata``
-          plugin also should point to ``stable/ocata`` branch.
-
 
 **********
 Deployment
 **********
 
-Openstack node
-==============
+Run playbooks
+=============
 
 .. note:: Before openstack deployment make sure Playbooks are configured.
 
@@ -134,79 +106,49 @@ This will make Ansible to use local ``hosts`` file instead of system broad defin
 .. code-block:: console
 
     $ cd playbooks
-    $ ./main.yml  --limit openstack
+    $ ./main.yml
 
+This playbooks can last 1 hour or more.
 
-Contrail node
-=============
+Please be patient while executing roles with ``stack.sh``. Real time logs from these operations can be viewed on each host by following command:
+``less -R /opt/stack/logs/stack.sh.log``
 
-**1. Clone Contrail Ansible Deployer from Github**
+*****
+Usage
+*****
 
-.. code-block:: console
+Access web interface
+====================
 
-    $ git clone http://github.com/Juniper/contrail-ansible-deployer
+http://10.100.0.3/ - devstack's horizon
+https://10.100.0.2:8143/ - OpenContrail UI
 
-**2. Define contrail node by specifying SSH name or IP of machine in ``inventory/hosts``**
+Create example VM
+=================
 
-.. warning:: If file is not empty. Remove everything and start from scratch.
+After successful deployment, it could be possible to create sample Virtual Machine.
+It is important to create new security group, because the default is not synchronized correctly between contrail and devstack.
 
-Edit hosts file
-
-.. code-block:: console
-
-    $ vim inventory/hosts
-
-Copy and paste snippet at the end of the file and change IP to Contrail machine public IP
-
-.. code-block:: text
-
-    container_hosts:
-      hosts:
-        10.100.0.2:
-          ansible_user: centos
-
-**3. Contrail nightly builds variables**
-
-Currently, nightly-builds are available in docker hub's opencontrailnightly repo.
-At https://hub.docker.com/r/opencontrailnightly/contrail-agent-vrouter/tags/
-can be viewed available contrail builds.
-
-* ``CONTRAIL_VERSION``: container tag for example ``latest``
-* ``CONTROLLER_NODES``: internal IP of contrail node
-* ``KEYSTONE_AUTH_HOST``: internal IP of openstack node
-* roles ``<IP>``: public IP of contrail node
-
-Edit inventory variables:
+These commands should be ran on one of the nodes (both are connected to one neutron):
 
 .. code-block:: console
 
-    $ vim config/instances.yaml
+    source ~/devstack/openrc admin demo
+    openstack network create --provider-network-type vlan --provider-segment 3 --provider-physical-network vhost net
+    openstack security group create --project demo secgroup
+    openstack security group rule create --ingress --protocol icmp secgroup
+    openstack security group rule create --ingress --protocol tcp secgroup
+    openstack subnet create --network net --subnet-range 192.168.1.0/24 --dhcp subnet
+    openstack server create  --flavor cirros256 --image cirros-0.3.4-x86_64-uec --nic net-id=net --security-group secgroup instance
 
-Example config:
+Created VM could be accessed by VNC (through horizon):
 
-.. code-block:: yaml
+1. Go to horizon's list of VMs
+  http://10.100.0.3/dashboard/project/instances/
+2. Enter into the VM's console
 
-    provider_config:
-      bms:
-    instances:
-      bms1:
-        provider: bms
-        ip: 10.100.0.2
-    contrail_configuration:
-      CONTAINER_REGISTRY: opencontrailnightly
-      CONTRAIL_VERSION: latest
-      CONTROLLER_NODES: 192.168.0.2  # contrail node internal IP
-      CLOUD_ORCHESTRATOR: openstack
-      AUTH_MODE: keystone
-      KEYSTONE_AUTH_ADMIN_PASSWORD: admin
-      KEYSTONE_AUTH_HOST: 192.168.0.3  # openstack node internal IP
-      RABBITMQ_NODE_PORT: 5673
-      PHYSICAL_INTERFACE: eth1
-      VROUTER_GATEWAY: 192.168.0.1
+If you are using public IP that is different from internal IP (as in the example), you should do additional steps:
+2a. Open console in new window by clicking on link "Click here to show only console"
+2b. Console will open using wrong IP. Change IP from 192.168.0.3 to 10.100.0.3.
 
-**4. Run ansible playbook**
-
-.. code-block:: console
-
-    $ ansible-playbook -i inventory/ playbooks/configure_instances.yml
-    $ ansible-playbook -i inventory/ -e orchestrator=openstack playbooks/install_contrail.yml
+3. You will see black console. Press enter to attach. Default login/password is ``cirros/cubswin:)``
