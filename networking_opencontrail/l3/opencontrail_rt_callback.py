@@ -13,13 +13,13 @@
 #    under the License.
 #
 
-from neutron.db import api as db_api
 from neutron.db import common_db_mixin
 from neutron.db import extraroute_db
 from neutron.db import l3_agentschedulers_db
 from neutron.db import l3_dvr_db
 from neutron.db import l3_gwmode_db
 from neutron_lib import constants as const
+from neutron_lib.db import api as db_api
 from neutron_lib.plugins import constants as plugin_const
 from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
@@ -293,7 +293,7 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
 
     @log_helpers.log_method_call
     def disassociate_floatingips(self, context, port_id, do_notify=True):
-        session = db_api.get_session()
+        session = db_api.get_writer_session()
 
         try:
             with session.begin(subtransactions=True):
