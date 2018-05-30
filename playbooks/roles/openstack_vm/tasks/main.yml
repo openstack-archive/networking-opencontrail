@@ -1,8 +1,0 @@
----
-# setting up Openstack VM
-
-- include: openstack_patch.yml
-
-#- include: install_drv_depend.yml
-
-- include: stack_sh.yml
