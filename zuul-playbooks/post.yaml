@@ -1,9 +1,13 @@
 - hosts: all
   roles:
-    - export-devstack-journal
-    - devstack-project-conf
-    - capture-system-logs
-    - fetch-devstack-log-dir
+    - role: export-devstack-journal
+      ignore_errors: yes
+    - role: devstack-project-conf
+      ignore_errors: yes
+    - role: capture-system-logs
+      ignore_errors: yes
+    - role: fetch-devstack-log-dir
+      ignore_errors: yes
   tasks:
     - name: Fetch contrail logs
       become: yes
@@ -29,5 +33,7 @@
         mode: pull
     - name: List running containers
       become: yes
-      register: running_containers_list
-      shell: "docker ps --format={% raw %}'{{.Names}}: {{.Status}}'{% endraw %}"
+      shell: |
+        set -e
+        set -x
+        docker ps --format={% raw %}'{{.Names}}: {{.Status}}'{% endraw %} | tee {{ zuul.executor.log_root }}/controller/logs/docker_containers.txt
