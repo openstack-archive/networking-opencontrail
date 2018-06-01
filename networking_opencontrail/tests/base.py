@@ -14,10 +14,19 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import os
 
 from oslotest import base
 
 
 class TestCase(base.BaseTestCase):
-
     """Test case base class for all unit tests."""
+
+
+class IntegrationTestCase(base.BaseTestCase):
+    """Base test case for all integration tests."""
+
+    def setUp(self):
+        super(IntegrationTestCase, self).super()
+        self.contrail_ip = os.getenv('CONTRAIL_IP', 'localhost')
+        self.contrail_api = 'http://{}:8082'.format(self.contrail_ip)
