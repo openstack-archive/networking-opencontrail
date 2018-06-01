@@ -17,11 +17,12 @@
     voting: false
     timeout: 10800
     roles:
-      - zuul: openstack-dev/run-devstack
+      - zuul: openstack-dev/devstack
     pre-run: zuul-playbooks/pre.yaml
     run: zuul-playbooks/run.yaml
     post-run: zuul-playbooks/post.yaml
     vars:
+      run_devstack: True
       devstack_plugins:
         networking-opencontrail: https://git.openstack.org/openstack/networking-opencontrail
       devstack_localrc:
