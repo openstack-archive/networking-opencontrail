@@ -21,3 +21,10 @@
         sudo mkdir -p /var/log/contrail
         sudo mkdir -p /etc/contrail
         sudo chmod 777 /var/log/contrail /etc/contrail
+
+- hosts: controller
+  tasks:
+    - name: Run devstack on the controller
+      include_role:
+        name: run-devstack
+      when: run_devstack == True
