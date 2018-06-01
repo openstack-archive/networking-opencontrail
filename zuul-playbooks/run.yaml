@@ -99,5 +99,8 @@
       when: devstack_base_dir is not defined
     - name: Execute integration testing
       shell:
-        cmd: "tox -e integration -- {{hostvars['controller'].ansible_default_ipv4.address}} {{hostvars['controller'].ansible_default_ipv4.address}}"
+        cmd: |
+          source /opt/stack/devstack/openrc admin
+          export CONTRAIL_IP={{ hostvars['controller'].ansible_default_ipv4.address }}
+          tox -e integration
         chdir: "{{ zuul.project.src_dir }}"
