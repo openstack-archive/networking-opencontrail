@@ -17,11 +17,12 @@
     voting: false
     timeout: 10800
     roles:
-      - zuul: openstack-dev/run-devstack
+      - zuul: openstack-dev/devstack
     pre-run: zuul-playbooks/pre.yaml
     run: zuul-playbooks/run.yaml
     post-run: zuul-playbooks/post.yaml
     vars:
+      run_devstack: True
       devstack_plugins:
         networking-opencontrail: https://git.openstack.org/openstack/networking-opencontrail
       devstack_localrc:
@@ -33,7 +34,60 @@
         Q_PLUGIN: ml2
         ML2_L3_PLUGIN: opencontrail-router
         NEUTRON_CREATE_INITIAL_NETWORKS: False
-        disable_service: n-net c-sch c-api c-vol dstat tempest
+        PUBLIC_PHYSICAL_NETWORK: public
+      devstack_services:
+        # Shared services
+        dstat: true
+        etcd3: true
+        mysql: true
+        peakmem_tracker: true
+        rabbit: true
+        tls-proxy: true
+        # Keystone services
+        key: true
+        # Glance services
+        g-api: false
+        g-reg: false
+        # Nova services
+        n-api: true
+        n-api-meta: true
+        n-cauth: true
+        n-cond: true
+        n-cpu: true
+        n-novnc: true
+        n-obj: true
+        n-sch: true
+        placement-api: true
+        # Neutron services
+        # We need to keep using the neutron-legacy based services for
+        # now until all issues with the new lib/neutron code are solved
+        q-agt: true
+        q-dhcp: true
+        q-l3: true
+        q-meta: true
+        q-metering: true
+        q-svc: true
+        # neutron-api: true
+        # neutron-agent: true
+        # neutron-dhcp: true
+        # neutron-l3: true
+        # neutron-metadata-agent: true
+        # neutron-metering: true
+        # Swift services
+        s-account: false
+        s-container: false
+        s-object: false
+        s-proxy: false
+        # Cinder services
+        c-api: false
+        c-bak: false
+        c-sch: false
+        c-vol: false
+        cinder: false
+        # Services we don't need.
+        # This section is not really needed, it's for readability.
+        horizon: false
+        tempest: true
       devstack_local_conf:
         post-config:
           $NEUTRON_CORE_PLUGIN_CONF:
