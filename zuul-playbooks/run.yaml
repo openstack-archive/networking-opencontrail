@@ -21,6 +21,8 @@
       become: yes
       shell: |
         yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        executable: /bin/bash
     - name: Install docker
       become: yes
       yum:
@@ -65,6 +67,8 @@
         cat ~/.ssh/contrail_rsa.pub | tee --append ~/.ssh/authorized_keys
         chmod 700 ~/.ssh
         chmod 600 ~/.ssh/contrail_rsa ~/.ssh/authorized_keys
+      args:
+        executable: /bin/bash
     - name: Configure instance before OpenContrail installation
       shell: |
         set -e
@@ -75,6 +79,8 @@
                               -e config_file=/home/zuul/contrail-ansible-deployer/config/instances.yaml \
                               -i ~/contrail-ansible-deployer/inventory/ \
                               ~/contrail-ansible-deployer/playbooks/configure_instances.yml
+      args:
+        executable: /bin/bash
     - name: Install OpenContrail
       retries: 2
       delay: 5
@@ -88,6 +94,8 @@
                               -e config_file=/home/zuul/contrail-ansible-deployer/config/instances.yaml \
                               -i ~/contrail-ansible-deployer/inventory/ \
                               ~/contrail-ansible-deployer/playbooks/install_contrail.yml
+      args:
+        executable: /bin/bash
     - name: Wait for contrail until fully running
       wait_for:
         sleep: 5
@@ -98,6 +106,13 @@
       devstack_base_dir: /opt/stack
       when: devstack_base_dir is not defined
     - name: Execute integration testing
-      shell:
-        cmd: "tox -e integration -- {{hostvars['controller'].ansible_default_ipv4.address}} {{hostvars['controller'].ansible_default_ipv4.address}}"
+      # /usr/sbin has been added to path as workaround to problem with
+      # "ip: command not found error."
+      shell: |
+        export PATH="/usr/sbin:$PATH"
+        export CONTRAIL_IP={{ hostvars['controller'].ansible_default_ipv4.address }}
+        source /opt/stack/devstack/openrc admin
+        tox -e integration
+      args:
         chdir: "{{ zuul.project.src_dir }}"
+        executable: /bin/bash
