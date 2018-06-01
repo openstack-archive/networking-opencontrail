@@ -14,10 +14,35 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import os
 
+from keystoneauth1 import identity
+from keystoneauth1 import session
+from neutronclient.v2_0 import client
 from oslotest import base
 
 
 class TestCase(base.BaseTestCase):
-
     """Test case base class for all unit tests."""
+
+
+class IntegrationTestCase(base.BaseTestCase):
+    """Base test case for all integration tests."""
+
+    def setUp(self):
+        super(IntegrationTestCase, self).setUp()
+        controller_ip = os.getenv('CONTROLLER_IP', 'localhost')
+        self.contrail_api = 'http://{}:8082'.format(controller_ip)
+
+        username = 'admin'
+        password = 'admin'
+        project_name = 'demo'
+        project_domain_id = 'default'
+        user_domain_id = 'default'
+        auth_url = 'http://{}:5000/identity'.format(controller_ip)
+        auth = identity.V3Password(auth_url=auth_url, username=username,
+                                   password=password, project_name=project_name,
+                                   project_domain_id=project_domain_id,
+                                   user_domain_id=user_domain_id)
+        sess = session.Session(auth=auth)
+        self.neutron = client.Client(session=sess)
