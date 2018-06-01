@@ -30,7 +30,11 @@ contrail_configuration:
   PHYSICAL_INTERFACE: "{{hostvars['controller'].ansible_default_ipv4.interface}}"
   KEYSTONE_AUTH_ADMIN_PASSWORD: admin
   KEYSTONE_AUTH_HOST: "{{hostvars['controller'].ansible_default_ipv4.address}}"
-  KEYSTONE_AUTH_URL_VERSION: /v3
+  KEYSTONE_AUTH_URL_VERSION: /identity/v3
+  KEYSTONE_AUTH_URL_TOKENS: /identity/v3/auth/tokens
+  KEYSTONE_AUTH_INSECURE: true
+  KEYSTONE_AUTH_ADMIN_PORT: 80
+  KEYSTONE_AUTH_PUBLIC_PORT: 80
   RABBITMQ_NODE_PORT: 5673
   UPDATE_IMAGES: true
   UPGRADE_KERNEL: true
