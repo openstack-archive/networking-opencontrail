@@ -1,0 +1,51 @@
+---
+- name: Check if /var/log/contrail directory exists
+  stat:
+    path: /var/log/contrail
+  register: contrail_logs_dir
+
+- name: Copy contrail logs
+  become: yes
+  synchronize:
+    src: "/var/log/contrail"
+    dest: "{{ zuul.executor.log_root }}/controller/logs"
+    mode: pull
+  when: contrail_logs_dir.stat.exists
+
+- name: Check if /home/zuul/contrail-ansible-deployer direcotry exists
+  stat:
+    path: /home/zuul/contrail-ansible-deployer
+  register: contrail_deployer_dir
+
+- name: Copy contrail-ansible-deployer config files
+  become: yes
+  synchronize:
+    src: "/home/zuul/contrail-ansible-deployer/{{ item }}"
+    dest: "{{ zuul.executor.log_root }}/controller/logs/contrail/{{ item }}"
+    mode: pull
+    recursive: yes
+  with_items:
+    - "config"
+    - "inventory"
+  when: contrail_deployer_dir.stat.exists
+
+- name: Check if /etc/docker directory exists
+  stat:
+    path: /etc/docker
+  register: docker_dir
+
+- name: Save list of running containers
+  become: yes
+  shell: |
+    set -e
+    set -x
+    docker ps --format={% raw %}'{{.Names}}: {{.Status}}'{% endraw %} | tee /etc/docker/running_containers.txt
+  when: docker_dir.stat.exists
+
+- name: Copy docker files
+  become: yes
+  synchronize:
+    src: "/etc/docker"
+    dest: "{{ zuul.executor.log_root }}/controller/logs"
+    mode: pull
+  when: docker_dir.stat.exists
