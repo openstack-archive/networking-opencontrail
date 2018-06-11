@@ -1,0 +1,10 @@
+- hosts: controller
+  roles:
+    - run-devstack
+
+- hosts: tempest
+  roles:
+    - setup-tempest-run-dir
+    - setup-tempest-data-dir
+    - acl-devstack-files
+    - run-tempest
