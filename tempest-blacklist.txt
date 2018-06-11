@@ -1,0 +1,22 @@
+# EXCLUDE SLOW TESTS
+.*\[.*\bslow\b.*\]
+
+# EXCLUDE STUFF LESS RELATED TO NETWORKING, TO REDUCE GATE LOAD
+tempest\.api\.compute\.admin.*
+tempest\.api\.compute\.certificates.*
+tempest\.api\.compute\.flavors.*
+tempest\.api\.compute\.images.*
+tempest\.api\.compute\.keypairs.*
+tempest\.api\.compute\.limits.*
+tempest\.api\.compute\.volumes.*
+tempest\.api\.identity.*
+tempest\.api\.image.*
+tempest\.api\.object.*
+tempest\.api\.volume.*
+tempest\.scenario\.test_encrypted_cinder.*
+tempest\.scenario\.test_object.*
+tempest\.scenario\.test_server.*
+tempest\.scenario\.test_shelve_instance.*
+tempest\.scenario\.test_snapshot.*
+tempest\.scenario\.test_stamp.*
+tempest\.scenario\.test_volume.*
