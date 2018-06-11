@@ -1,0 +1,55 @@
+---
+- name: Clone contrail-ansible-deployer repository
+  git:
+    clone: yes
+    force: yes
+    dest: ~/contrail-ansible-deployer
+    repo: https://github.com/Juniper/contrail-ansible-deployer.git
+    version: R5.0
+
+- name: Update hosts file
+  template:
+    src: hosts.j2
+    dest: ~/contrail-ansible-deployer/inventory/hosts
+
+- name: Update instances.yaml file
+  template:
+    src: instances.yaml.j2
+    dest: ~/contrail-ansible-deployer/config/instances.yaml
+
+- name: Create ssh key and add to authorized_key for OpenContrail installation
+  shell: |
+    set -e
+    set -x
+    yes | ssh-keygen -t rsa -N '' -f ~/.ssh/contrail_rsa
+    cat ~/.ssh/contrail_rsa.pub | tee --append ~/.ssh/authorized_keys
+    chmod 700 ~/.ssh
+    chmod 600 ~/.ssh/contrail_rsa ~/.ssh/authorized_keys
+  args:
+    executable: /bin/bash
+
+- name: Configure instance before OpenContrail installation
+  shell: |
+    set -e
+    set -x
+    sudo ansible-playbook -vv \
+                          -e orchestrator=none \
+                          -e config_file=~/contrail-ansible-deployer/config/instances.yaml \
+                          -i ~/contrail-ansible-deployer/inventory/ \
+                          ~/contrail-ansible-deployer/playbooks/configure_instances.yml
+  args:
+    executable: /bin/bash
+
+- name: Install OpenContrail
+  retries: 2
+  delay: 5
+  shell: |
+    set -e
+    set -x
+    sudo ansible-playbook -vv \
+                          -e orchestrator=none \
+                          -e config_file=~/contrail-ansible-deployer/config/instances.yaml \
+                          -i ~/contrail-ansible-deployer/inventory/ \
+                          ~/contrail-ansible-deployer/playbooks/install_contrail.yml
+  args:
+    executable: /bin/bash
