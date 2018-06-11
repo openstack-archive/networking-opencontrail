@@ -1,0 +1,8 @@
+[defaults]
+nocows = 1
+host_key_checking = False
+log_path = /var/log/ansible.log
+jinja2_extensions=jinja2.ext.do
+forks = 1
+inventory = "{{ contrail_deployer_path }}/inventory"
+display_args_to_stdout = True

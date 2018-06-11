@@ -1,0 +1,10 @@
+---
+- name: "Check if /var/log/ansible.log file exists"
+  stat:
+    path: /var/log/ansible.log
+  register: ansible_log
+
+- name: Copy ansible.log file
+  become: yes
+  shell: "cp /var/log/ansible.log {{ zuul.executor.log_root }}/controller/logs"
+  when: ansible_log.stat.exists
