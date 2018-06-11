@@ -1,28 +1,4 @@
-- hosts: all
-  tasks:
-    - name: Add IP and local domain to hosts
-      shell: |
-        set -e
-        set -x
-        ip_addr="{{ hostvars['controller'].ansible_default_ipv4.address }}"
-        echo "${ip_addr} $(hostname)" | sudo tee --append /etc/hosts
-    # In zuul environment docker needs explicit DNS configuration
-    - name: Create docker configuration file with IP of nameservers
-      shell: |
-        set -e
-        set -x
-        sudo mkdir -p /etc/docker
-        echo "{\"dns\": [\"1.1.1.1\", \"8.8.8.8\"]}" | sudo tee /etc/docker/daemon.json
-    # Dirty ugly workaround on contrail-ansible-deployer not using 'become' in playbooks
-    - name: Create directories for contrail
-      shell: |
-        set -e
-        set -x
-        sudo mkdir -p /var/log/contrail
-        sudo mkdir -p /etc/contrail
-        sudo chmod 777 /var/log/contrail /etc/contrail
-
 - hosts: controller
   roles:
     - role: run-devstack
-      when: run_devstack == True
+    - role: run-contrail
