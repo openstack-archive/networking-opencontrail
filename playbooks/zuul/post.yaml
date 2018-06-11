@@ -1,0 +1,13 @@
+- hosts: all
+  roles:
+    - role: export-devstack-journal
+      ignore_errors: yes
+    - role: devstack-project-conf
+      ignore_errors: yes
+    - role: capture-system-logs
+      ignore_errors: yes
+    - role: fetch-devstack-log-dir
+      ignore_errors: yes
+    - role: fetch-docker-logs
+    - role: fetch-ansible-logs
+    - role: fetch-contrail-logs
