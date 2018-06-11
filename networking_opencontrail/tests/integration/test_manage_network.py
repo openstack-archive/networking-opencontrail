@@ -12,9 +12,14 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import time
+
 import requests
+from oslo_log import log as logging
 
 from networking_opencontrail.tests.base import IntegrationTestCase
+
+LOG = logging.getLogger(__name__)
 
 
 class TestManageNetwork(IntegrationTestCase):
@@ -34,9 +39,6 @@ class TestManageNetwork(IntegrationTestCase):
                 return result['virtual-network']
         return None
 
-    def test_contrail_synchronized_projects(self):
-        pass
-
     def test_create_vlan_network(self):
         """Create vlan network using openstack CLI.
 
@@ -51,8 +53,10 @@ class TestManageNetwork(IntegrationTestCase):
             'admin_state_up': True
         }
         self.neutron.create_network({'network': network})
+        time.sleep(1)
 
         result = requests.get(self.api_virtual_nets).json()
+        LOG.info(result)
         check_network = self.find_network(network['name'],
                                           result['virtual-networks'])
 

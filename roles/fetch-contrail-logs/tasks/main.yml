@@ -1,0 +1,48 @@
+---
+- name: Set contrail-ansible-deployer path
+  set_fact:
+    contrail_deployer_path: "/home/zuul/contrail-ansible-deployer"
+  when: contrail_deployer_path is undefined
+
+- name: Check if /var/log/contrail directory exists
+  stat:
+    path: "/var/log/contrail"
+  register: contrail_logs
+
+- name: Copy contrail logs
+  become: yes
+  synchronize:
+    src: "/var/log/contrail"
+    dest: "{{ zuul.executor.log_root }}/controller/logs"
+    mode: pull
+  when: contrail_logs.stat.exists
+
+- name: "Check if {{ contrail_deployer_path }} directory exists"
+  stat:
+    path: "{{ contrail_deployer_path }}"
+  register: contrail_deployer
+
+- name: Create temporary directory for contrail config files
+  file:
+    path: "{{ contrail_deployer_path }}/contrail_conf"
+    state: directory
+    mode: a=rw
+
+- name: Prepare contrail-ansible-deployer config files for sync
+  shell: |
+    set -e
+    set -x
+    sudo cp {{ contrail_deployer_path }}/{{ item }} {{ contrail_deployer_path }}/contrail_conf/
+  with_items:
+    - ansible.cfg
+    - inventory/hosts
+    - config/instances.yaml
+  when: contrail_deployer.stat.exists
+
+- name: Copy contrail-ansible-deployer config files
+  become: yes
+  synchronize:
+    src: "{{ contrail_deployer_path }}/contrail_conf"
+    dest: "{{ zuul.executor.log_root }}/controller/logs"
+    mode: pull
+  when: contrail_deployer.stat.exists
