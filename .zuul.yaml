@@ -2,9 +2,59 @@
     check:
       jobs:
         - contrail-integration
+        - noc-devstack-tempest
     gate:
       jobs:
         - contrail-integration
+        - noc-devstack-tempest
+
+- job:
+    name: noc-devstack-tempest
+    parent: devstack-tempest
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/tempest
+      - openstack/networking-opencontrail
+    vars:
+      devstack_plugins:
+        networking-opencontrail: https://git.openstack.org/openstack/networking-opencontrail
+      devstack_localrc:
+        ADMIN_PASSWORD: admin
+        HOST_IP: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+        OPENCONTRAIL_APISERVER_IP: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+        OPENCONTRAIL_APISERVER_PORT: 8082
+        Q_USE_SECGROUP: True
+        Q_PLUGIN: ml2
+        ML2_L3_PLUGIN: opencontrail-router
+      devstack_local_conf:
+        post-config:
+          $NEUTRON_CORE_PLUGIN_CONF:
+            ml2:
+              type_drivers: local,flat,vlan,gre,vxlan,geneve
+              tenant_network_types: vlan
+              extension_drivers: port_security
+              mechanism_drivers: opencontrail,openvswitch,linuxbridge
+            ml2_type_vlan:
+              network_vlan_ranges: public:1:1000
+            ml2_type_vxlan:
+              vni_ranges: 1:1000
+            ml2_type_gre:
+              tunnel_id_ranges: 1:1000
+      devstack_services:
+        tempest: true
+      test_results_stage_name: 'test_results'
+      zuul_copy_output:
+        '{{ devstack_base_dir }}/tempest/etc/tempest.conf': 'logs'
+        '{{ devstack_base_dir }}/tempest/etc/accounts.yaml': 'logs'
+        '{{ devstack_base_dir }}/tempest/tempest.log': 'logs'
+        '{{ stage_dir }}/{{ test_results_stage_name }}.subunit': 'logs'
+        '{{ stage_dir }}/{{ test_results_stage_name }}.html': 'logs'
+        '{{ stage_dir }}/stackviz': 'logs'
+      extensions_to_txt:
+        conf: True
+        log: True
+        yaml: True
+        yml: True
 
 - job:
     name: contrail-integration
