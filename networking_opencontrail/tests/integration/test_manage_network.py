@@ -34,9 +34,6 @@ class TestManageNetwork(IntegrationTestCase):
                 return result['virtual-network']
         return None
 
-    def test_contrail_synchronized_projects(self):
-        pass
-
     def test_create_vlan_network(self):
         """Create vlan network using openstack CLI.
 
