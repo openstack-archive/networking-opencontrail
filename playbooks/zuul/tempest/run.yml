@@ -1,0 +1,12 @@
+- hosts: controller
+  roles:
+    - run-devstack
+    - run-contrail
+    - setup-tempest-run-dir
+    - setup-tempest-data-dir
+    - acl-devstack-files
+    - run-tempest
+  tasks:
+    - name: Pause execution to make sure workers flushed all logs before stoping
+      pause:
+        seconds: 30
