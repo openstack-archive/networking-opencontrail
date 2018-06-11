@@ -1,0 +1,21 @@
+- hosts: controller
+  tasks:
+    - include_role:
+      name: run-devstack
+
+    - name: Wait for neutron until fully running
+      wait_for:
+        sleep: 5
+        host: "{{ hostvars['controller'].ansible_default_ipv4.address }}"
+        port: 9696
+        timeout: 300
+
+    - include_role:
+      name: run-contrail
+
+- hosts: tempest
+  roles:
+    - setup-tempest-run-dir
+    - setup-tempest-data-dir
+    - acl-devstack-files
+    - run-tempest
