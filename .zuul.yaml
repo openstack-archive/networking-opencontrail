@@ -1,30 +1,50 @@
 - project:
+    name: openstack/networking-opencontrail
     check:
       jobs:
-        - contrail-integration
+        - noc-integration:
+            voting: false
+        - noc-tempest:
+            voting: false
     gate:
       jobs:
-        - contrail-integration
+        - noc-integration
+        - noc-tempest
+    periodic:
+      jobs:
+        - noc-integration:
+            branches:
+              - master
+              - ^stable/[a-z]+$
+        - noc-tempest:
+            branches:
+              - master
+              - ^stable/[a-z]+$
 
 - job:
-    name: contrail-integration
-    parent: devstack-platform-centos-7
-    description: |
-      Integration tests between devstack and opencontrail
-      using openstack/networking-opencontrail neutron plugin
-    required-projects:
-      - openstack/networking-opencontrail
-    voting: false
-    timeout: 10800
+    name: noc-base
+    parent: devstack-tempest
+    description: Networking-OpenContrail base job
+    post-run: playbooks/zuul/post.yaml
+    nodeset: devstack-single-node-centos-7
     roles:
       - zuul: openstack-dev/devstack
-    pre-run: zuul-playbooks/pre.yaml
-    run: zuul-playbooks/run.yaml
-    post-run: zuul-playbooks/post.yaml
+    timeout: 9200
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/tempest
+      - openstack/neutron-tempest-plugin
+      - openstack/networking-opencontrail
+      - openstack/glance
+      - openstack/keystone
+      - openstack/neutron
+      - openstack/nova
     vars:
-      run_devstack: True
-      devstack_plugins:
-        networking-opencontrail: https://git.openstack.org/openstack/networking-opencontrail
+      devstack_base_dir: /opt/stack
       devstack_localrc:
         DEBUG: True
         ADMIN_PASSWORD: admin
@@ -94,13 +114,31 @@
         post-config:
           $NEUTRON_CORE_PLUGIN_CONF:
             ml2:
-              type_drivers: local,flat,vlan,gre,vxlan,geneve
-              tenant_network_types: vlan
+              type_drivers: vlan,vxlan
+              tenant_network_types: vlan,vxlan
               extension_drivers: port_security
               mechanism_drivers: opencontrail,openvswitch,linuxbridge
             ml2_type_vlan:
               network_vlan_ranges: public:1:1000
             ml2_type_vxlan:
               vni_ranges: 1:1000
-            ml2_type_gre:
-              tunnel_id_ranges: 1:1000
+
+- job:
+    name: noc-tempest
+    parent: noc-base
+    description: Neutron tempest tests
+    run: playbooks/zuul/noc-tempest.yaml
+    vars:
+      tempest_test_regex: "(.*)neutron(.*)"
+      devstack_plugins:
+        networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
+        neutron-tempest-plugin: git://git.openstack.org/openstack/neutron-tempest-plugin
+
+- job:
+    name: noc-integration
+    parent: noc-base
+    description: Integration tests between devstack and opencontrail
+    run: playbooks/zuul/noc-integration.yaml
+    vars:
+      devstack_plugins:
+        networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
