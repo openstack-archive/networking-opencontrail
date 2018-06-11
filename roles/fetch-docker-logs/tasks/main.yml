@@ -1,0 +1,21 @@
+---
+- name: Check if /etc/docker directory exists
+  stat:
+    path: /etc/docker
+  register: docker_dir
+
+- name: Save list of running containers
+  become: yes
+  shell: |
+    set -e
+    set -x
+    docker ps --format={% raw %}'{{.Names}}: {{.Status}}'{% endraw %} | tee /etc/docker/running_containers.txt
+  when: docker_dir.stat.exists
+
+- name: Copy docker files
+  become: yes
+  synchronize:
+    src: "/etc/docker"
+    dest: "{{ zuul.executor.log_root }}/controller/logs"
+    mode: pull
+  when: docker_dir.stat.exists

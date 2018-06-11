@@ -1,0 +1,14 @@
+localhost:
+  hosts:
+    localhost:
+      config_file: "{{ contrail_deployer_path }}/config/instances.yaml"
+      connection: local
+      ansible_connection: local
+      python_interpreter: python
+      ansible_python_interpreter: python
+container_hosts:
+  hosts:
+    {{ hostvars['controller'].ansible_default_ipv4.address }}:
+      config_file: "{{ contrail_deployer_path }}/config/instances.yaml"
+      python_interpreter: python
+      ansible_python_interpreter: python
