@@ -1,10 +1,68 @@
 - project:
+    name: openstack/networking-opencontrail
     check:
       jobs:
-        - contrail-integration
+        - contrail-integration:
+            voting: false
+        - noc-tempest:
+            voting: false
     gate:
       jobs:
         - contrail-integration
+        - noc-tempest
+    periodic:
+      jobs:
+        - contrail-integration:
+            branches:
+              - master
+              - ^stable/[a-z]+$
+        - noc-tempest:
+            branches:
+              - master
+              - ^stable/[a-z]+$
+
+- job:
+    name: noc-tempest
+    parent: devstack-tempest
+    description: Tempest based tests
+    required-projects:
+      - openstack/neutron-tempest-plugin
+      - openstack/networking-opencontrail
+    roles:
+      - zuul: openstack-dev/devstack
+    timeout: 9000
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
+    vars:
+      devstack_plugins:
+        networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
+        neutron-tempest-plugin: git://git.openstack.org/openstack/neutron-tempest-plugin
+      tempest_test_regex: tempest\.(api|scenario|thirdparty)|neutron_tempest_plugin
+      devstack_localrc:
+        DEBUG: True
+        ADMIN_PASSWORD: admin
+        HOST_IP: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+        OPENCONTRAIL_APISERVER_IP: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+        OPENCONTRAIL_APISERVER_PORT: 8082
+        Q_USE_SECGROUP: True
+        Q_PLUGIN: ml2
+        ML2_L3_PLUGIN: opencontrail-router
+      devstack_local_conf:
+        post-config:
+          $NEUTRON_CORE_PLUGIN_CONF:
+            ml2:
+              type_drivers: local,flat,vlan,gre,vxlan,geneve
+              tenant_network_types: vlan
+              extension_drivers: port_security
+              mechanism_drivers: opencontrail,openvswitch,linuxbridge
+            ml2_type_vlan:
+              network_vlan_ranges: public:1:1000
+            ml2_type_vxlan:
+              vni_ranges: 1:1000
+            ml2_type_gre:
+              tunnel_id_ranges: 1:1000
 
 - job:
     name: contrail-integration
@@ -14,17 +72,20 @@
       using openstack/networking-opencontrail neutron plugin
     required-projects:
       - openstack/networking-opencontrail
-    voting: false
     timeout: 10800
     roles:
       - zuul: openstack-dev/devstack
     pre-run: zuul-playbooks/pre.yaml
     run: zuul-playbooks/run.yaml
     post-run: zuul-playbooks/post.yaml
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
     vars:
       run_devstack: True
       devstack_plugins:
-        networking-opencontrail: https://git.openstack.org/openstack/networking-opencontrail
+        networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
       devstack_localrc:
         DEBUG: True
         ADMIN_PASSWORD: admin
