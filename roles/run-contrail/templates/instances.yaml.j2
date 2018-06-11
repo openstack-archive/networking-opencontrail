@@ -36,7 +36,6 @@ contrail_configuration:
   KEYSTONE_AUTH_ADMIN_PORT: 80
   KEYSTONE_AUTH_PUBLIC_PORT: 80
   RABBITMQ_NODE_PORT: 5673
-  UPDATE_IMAGES: true
   UPGRADE_KERNEL: true
   CONTROLLER_NODES: "{{hostvars['controller'].ansible_default_ipv4.address}}"
   CONTROL_NODES: "{{hostvars['controller'].ansible_default_ipv4.address}}"
