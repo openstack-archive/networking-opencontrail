@@ -1,0 +1,12 @@
+---
+# Provision instance then install and run Contrail
+
+- include: provision-instance.yml
+- include: install-contrail.yml
+
+- name: Wait for contrail until fully running
+  wait_for:
+    sleep: 5
+    host: "{{ hostvars['controller'].ansible_default_ipv4.address }}"
+    port: 8082
+    timeout: 300
