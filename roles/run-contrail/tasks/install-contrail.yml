@@ -1,0 +1,94 @@
+---
+- name: Set contrail-ansible-deployer path
+  set_fact:
+    contrail_deployer_path: "/home/zuul/contrail-ansible-deployer"
+  when: contrail_deployer_path is undefined
+
+- name: Set ansible log path
+  set_fact:
+    ansible_log_path: "/var/log/ansible"
+  when: ansible_log_path is undefined
+
+- name: Clone contrail-ansible-deployer repository
+  git:
+    clone: yes
+    force: yes
+    dest: "{{ contrail_deployer_path }}"
+    repo: https://github.com/Juniper/contrail-ansible-deployer.git
+    version: R5.0
+
+- name: Update hosts file
+  template:
+    src: hosts.j2
+    dest: "{{ contrail_deployer_path }}/inventory/hosts"
+
+- name: Update instances.yaml file
+  template:
+    src: instances.yaml.j2
+    dest: "{{ contrail_deployer_path }}/config/instances.yaml"
+
+- name: Update ansible.cfg file
+  template:
+    src: ansible.cfg.j2
+    dest: "{{ contrail_deployer_path }}/ansible.cfg"
+
+- name: Create ssh key and add to authorized_key for OpenContrail installation
+  shell: |
+    set -e
+    set -x
+    yes | ssh-keygen -t rsa -N '' -f ~/.ssh/contrail_rsa
+    cat ~/.ssh/contrail_rsa.pub | tee --append ~/.ssh/authorized_keys
+    chmod 700 ~/.ssh
+    chmod 600 ~/.ssh/contrail_rsa ~/.ssh/authorized_keys
+  args:
+    executable: /bin/bash
+
+# Contrail ansible deployer issue Workaround
+# Deployer doesn't use become:yes when creating directories for contrail
+- name: Create /etc/contrail directory
+  become: yes
+  file:
+    path: "/etc/contrail"
+    state: directory
+    mode: a=rwx
+
+- name: Create /var/log/contrail directory
+  become: yes
+  file:
+    path: "/var/log/contrail"
+    state: directory
+    mode: a=rw
+# Workaround END
+
+- name: "Create {{ ansible_log_path }} directory"
+  become: yes
+  file:
+    path: "{{ ansible_log_path }}"
+    state: directory
+    mode: a=rw
+
+- name: "[CONTRAIL ANSIBLE DEPLOYER]: configure instances"
+  shell: |
+    set -e
+    set -x
+    sudo ansible-playbook -vv \
+                          -e config_file=config/instances.yaml \
+                          -i inventory/ \
+                          playbooks/configure_instances.yml
+  args:
+    chdir: "{{ contrail_deployer_path }}"
+    executable: /bin/bash
+
+- name: "[CONTRAIL ANSIBLE DEPLOYER]: install contrail"
+  retries: 2
+  delay: 5
+  shell: |
+    set -e
+    set -x
+    sudo ansible-playbook -vv \
+                          -e config_file=config/instances.yaml \
+                          -i inventory/ \
+                          playbooks/install_contrail.yml
+  args:
+    chdir: "{{ contrail_deployer_path }}"
+    executable: /bin/bash
