@@ -15,15 +15,14 @@ instances:
       config:
       control:
       vrouter:
-      openstack:
+      openstack_network:
       openstack_compute:
 
 global_configuration:
   CONTAINER_REGISTRY: opencontrailnightly
 
 contrail_configuration:
-  CONTRAIL_VERSION: ocata-master-105
-  CLOUD_ORCHESTRATOR: openstack
+  CONTRAIL_VERSION: latest
   LOG_LEVEL: SYS_DEBUG
   AAA_MODE: no-auth
   AUTH_MODE: keystone
