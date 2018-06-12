@@ -1,0 +1,3 @@
+---
+  - name: discover hosts
+    shell: nova-manage cell_v2 discover_hosts

@@ -1,0 +1,21 @@
+---
+  - name: Fetch devstack
+    git:
+      repo: "https://github.com/openstack-dev/devstack.git"
+      dest: ~/devstack
+      version: "{{ openstack_branch }}"
+      accept_hostkey: yes
+      force: yes
+  - name: Put local.conf
+    template:
+      src: controller_local.conf.j2
+      dest: ~/devstack/local.conf
+  - name: optionally unstack
+    shell: ./unstack.sh
+    args:
+      chdir: ~/devstack
+    ignore_errors: yes
+  - name: stack.sh
+    shell: ./stack.sh
+    args:
+      chdir: ~/devstack

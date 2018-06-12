@@ -1,0 +1,2 @@
+---
+- include: discover_hosts.yml

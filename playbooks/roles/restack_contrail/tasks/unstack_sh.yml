@@ -1,5 +1,0 @@
----
-# run unstack.sh
-- name: unstack.sh Contrail node
-  command: chdir=~/devstack ./unstack.sh
-  ignore_errors: no

@@ -1,3 +1,11 @@
 #!/usr/bin/env ansible-playbook
 
-- include: env.yml
+- hosts: openstack
+  roles:
+    - devstack_vm
+- hosts: contrail
+  roles:
+    - contrail_vm
+- hosts: openstack
+  roles:
+    - discover_hosts

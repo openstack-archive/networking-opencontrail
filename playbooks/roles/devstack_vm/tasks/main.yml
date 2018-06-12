@@ -1,0 +1,2 @@
+---
+- include: devstack_deployer.yml

@@ -1,0 +1,43 @@
+[[local|localrc]]
+DEST=/opt/stack
+
+HOST_IP='{{ openstack_ip }}'
+SERVICE_HOST=$HOST_IP
+MULTI_HOST=False
+
+LOGFILE=$DEST/logs/stack.sh.log
+LOGDAYS=1
+
+ADMIN_PASSWORD=admin
+DATABASE_PASSWORD=$ADMIN_PASSWORD
+RABBIT_PASSWORD=$ADMIN_PASSWORD
+SERVICE_PASSWORD=$ADMIN_PASSWORD
+
+NOVA_BRANCH={{ openstack_branch }}
+CINDER_BRANCH={{ openstack_branch }}
+GLANCE_BRANCH={{ openstack_branch }}
+HORIZON_BRANCH={{ openstack_branch }}
+KEYSTONE_BRANCH={{ openstack_branch }}
+NEUTRON_BRANCH={{ openstack_branch }}
+
+LOG_COLOR=True
+USE_SCREEN=True
+
+disable_service n-net c-sch c-api c-vol dstat tempest
+
+NEUTRON_CREATE_INITIAL_NETWORKS=False
+
+Q_USE_SECGROUP=True
+Q_PLUGIN=ml2
+
+ML2_L3_PLUGIN=opencontrail-router
+
+OPENCONTRAIL_APISERVER_IP='{{ contrail_ip }}'
+OPENCONTRAIL_APISERVER_PORT=8082
+
+enable_plugin networking-opencontrail https://git.openstack.org/openstack/networking-opencontrail refs/changes/83/563983/2
+
+PHYSICAL_NETWORK=vhost
+TENANT_VLAN_RANGE=1:4094
+Q_ML2_TENANT_NETWORK_TYPE=vlan
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=opencontrail
