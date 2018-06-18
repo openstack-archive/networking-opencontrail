@@ -1,0 +1,3 @@
+---
+- include: update_kernel.yml
+- include: contrail.yml

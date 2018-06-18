@@ -1,0 +1,19 @@
+---
+  - name: update kernel
+    become: yes
+    yum:
+      name: kernel
+      state: latest
+    register: update_kernel
+
+  - name: Reboot the machine
+    become: yes
+    shell: nohup bash -c "sleep 2s && shutdown -r now" &
+    when: update_kernel.changed
+    register: reboot_machine
+
+  - name: Wait for machine to come back
+    wait_for_connection:
+      timeout: 240
+      delay: 10
+    when: reboot_machine.changed

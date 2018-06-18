@@ -1,9 +1,0 @@
----
-
-- hosts: contrail
-  gather_facts: no 
-  become: no
-  roles:
-    - { role: restack_contrail }
-    - { role: source_openrc }
-
