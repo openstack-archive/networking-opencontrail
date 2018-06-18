@@ -1,0 +1,41 @@
+---
+  - name: Install required utilities
+    become: yes
+    yum:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - lvm2
+      - git
+
+  - name: Fetch devstack
+    git:
+      repo: "https://github.com/openstack-dev/devstack.git"
+      dest: ~/devstack
+      version: "{{ openstack_branch }}"
+      accept_hostkey: yes
+      force: yes
+
+  - name: Fetch devstack requirements
+    become: yes
+    git:
+      repo: "git://git.openstack.org/openstack/requirements.git"
+      dest: /opt/stack/requirements
+      version: "{{ openstack_branch }}"
+      accept_hostkey: yes
+      force: yes
+
+  # If there are any problems with libvirt, then the version of libvirt should be upgraded in devstack requirements.
+  #
+  # The version of libvirt-python must be the same as, or newer than the version of the libvirt C library you're building against.
+  # source: https://www.redhat.com/archives/libvirt-users/2017-September/msg00003.html
+  # Since 2018-05-10 the newest libvirt package for centos7 is 3.9.0
+  # Alternatively install libvirt 2.5.0 and lock package, so yum can't update it https://www.tecmint.com/yum-lock-disable-blacklist-certain-package-update-version/
+  - name: Fix libvirt version
+    become: yes
+    shell: sed -i 's/libvirt-python===2.5.0/libvirt-python===3.9.0/' /opt/stack/requirements/upper-constraints.txt
+
+  - name: Put local.conf
+    template:
+      src: compute_local.conf.j2
+      dest: ~/devstack/local.conf

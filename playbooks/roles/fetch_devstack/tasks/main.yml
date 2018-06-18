@@ -1,4 +1,0 @@
----
-# Fetch devstack and prepare configuration in local.conf file
-
-- include: fetch_devstack.yml
