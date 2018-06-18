@@ -1,7 +1,0 @@
----
-# install ssh keys on VM 
-- name: install ssh key on VM
-  authorized_key: user=ubuntu 
-                  key={{ lookup('file', '~/.ssh/id_rsa.pub') }} 
-                  state=present
-  become: no

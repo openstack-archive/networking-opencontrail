@@ -1,7 +1,0 @@
----
-# Setting up OpenContrail VM with Contrail service DISABLED
-
-- include: kernel.yml
-- include: dependencies.yml
-- include: contrail_patches.yml
-- include: stack_sh.yml

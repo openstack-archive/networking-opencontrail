@@ -1,5 +1,4 @@
-[contrail]
-contrail-node
+controller ansible_host=openstack-node ansible_user=ubuntu
 
-[openstack]
-openstack-node
+[compute]
+contrail-node ansible_user=centos

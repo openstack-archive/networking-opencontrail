@@ -1,0 +1,15 @@
+---
+- name: optionally unstack
+  shell: PATH="/usr/sbin:$PATH" ./unstack.sh
+  args:
+    chdir: ~/devstack
+  ignore_errors: yes
+
+- name: build OpenStack via stack.sh
+  command: ./stack.sh
+  args:
+    chdir: ~/devstack
+
+- name: discover hosts on openstack
+  delegate_to: "{{ hostvars['controller'].ansible_host }}"
+  shell: nova-manage cell_v2 discover_hosts
