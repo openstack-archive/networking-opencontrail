@@ -1,9 +1,17 @@
 ---
 # TODO(paweł_zadrożny) remove voting:false from all noc-tempest* jobs when all defects are fixed
+# TODO(paweł_zadrożny) remove voting:false from tox-{py35,py36} jobs when all incompatibilities are fixed
 - project:
     name: openstack/networking-opencontrail
     check:
       jobs:
+        - openstack-tox-py27
+        - openstack-tox-py35:
+            voting: false
+        - openstack-tox-py36:
+            voting: false
+        - openstack-tox-pep8
+        - build-openstack-sphinx-docs
         - noc-integration
         - noc-tempest:
             voting: false
@@ -11,6 +19,13 @@
             voting: false
     gate:
       jobs:
+        - openstack-tox-py27
+        - openstack-tox-py35:
+            voting: false
+        - openstack-tox-py36:
+            voting: false
+        - openstack-tox-pep8
+        - build-openstack-sphinx-docs
         - noc-integration
         - noc-tempest:
             voting: false
