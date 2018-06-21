@@ -29,7 +29,7 @@ from oslo_serialization import jsonutils as json
 from eventlet.greenthread import getcurrent
 from simplejson import JSONDecodeError
 
-import contrail_driver_base as driver_base
+from networking_opencontrail.drivers import contrail_driver_base as driver_base
 
 _DEFAULT_KS_CERT_BUNDLE = "/tmp/keystonecertbundle.pem"
 _DEFAULT_API_CERT_BUNDLE = "/tmp/apiservercertbundle.pem"
@@ -251,7 +251,7 @@ class OpenContrailDrivers(driver_base.OpenContrailDriversBase):
         contrail api server.
         """
 
-        for key, value in res_data[res_type].items():
+        for key, value in res_data[res_type].copy().items():
             if value == ATTR_NOT_SPECIFIED:
                 del res_data[res_type][key]
 

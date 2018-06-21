@@ -4,6 +4,10 @@
     name: openstack/networking-opencontrail
     check:
       jobs:
+        - openstack-tox-py27
+        - openstack-tox-py35
+        - openstack-tox-py36
+        - openstack-tox-pep8
         - noc-integration:
             voting: false
         - noc-tempest:
@@ -12,6 +16,10 @@
             voting: false
     gate:
       jobs:
+        - openstack-tox-py27
+        - openstack-tox-py35
+        - openstack-tox-py36
+        - openstack-tox-pep8
         - noc-integration:
             voting: false
         - noc-tempest:
