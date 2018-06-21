@@ -18,7 +18,7 @@ from oslo_log import log as logging
 import networking_opencontrail.drivers.drv_opencontrail as drv
 from neutron_lib.plugins.ml2 import api
 
-import opencontrail_sg_callback
+from networking_opencontrail.ml2 import opencontrail_sg_callback
 
 LOG = logging.getLogger(__name__)
 
