@@ -1,0 +1,17 @@
+---
+# Provision instance then install and run Contrail
+
+- include: provision-instance.yml
+- include: install-contrail.yml
+
+- name: Wait for Contrail API to come up
+  uri:
+    url: "http://{{ hostvars['controller'].ansible_default_ipv4.address }}:8082/projects"
+    status_code:
+      - 200
+      - 304
+    validate_certs: no
+  register: result
+  until: result.status == 200 or result.status == 304
+  retries: 30
+  delay: 5
