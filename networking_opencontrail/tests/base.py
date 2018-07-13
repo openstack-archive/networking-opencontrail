@@ -41,5 +41,5 @@ class IntegrationTestCase(base.BaseTestCase):
                                    project_name='demo',
                                    project_domain_id='default',
                                    user_domain_id='default')
-        sess = session.Session(auth=auth, verify=False)
-        self.neutron = neutron.Client(session=sess, insecure=True)
+        sess = session.Session(auth=auth)
+        self.neutron = neutron.Client(session=sess)
