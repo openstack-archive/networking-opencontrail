@@ -1,0 +1,16 @@
+- hosts: controller
+  roles:
+    - run-devstack
+    - run-contrail
+  tasks:
+    - name: Execute noc-integration testing
+      shell: |
+        export CONTROLLER_IP={{ hostvars['controller'].ansible_default_ipv4.address }}
+        tox -vv -e integration
+      args:
+        chdir: "{{ zuul.project.src_dir }}"
+        executable: /bin/bash
+
+    - name: Pause execution to make sure workers flushed all logs before stoping
+      pause:
+        seconds: 30
