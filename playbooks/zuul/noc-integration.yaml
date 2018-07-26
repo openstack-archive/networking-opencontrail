@@ -3,6 +3,25 @@
     - run-devstack
     - run-contrail
   tasks:
+    - name: Install epel-release
+      become: yes
+      package:
+        name: epel-release
+
+    - name: Install Python3.6
+      become: yes
+      package:
+        name: python36
+
+    - name: Create alias on Python3
+      # Python3.6 installation don't create Python3 alias which is required by tox
+      become: yes
+      shell: |
+        set -e
+        set -x
+        ln -s /usr/bin/python3.6 /usr/bin/python3
+        python3 --version
+
     - name: Execute noc-integration testing
       shell: |
         export CONTROLLER_IP={{ hostvars['controller'].ansible_default_ipv4.address }}
