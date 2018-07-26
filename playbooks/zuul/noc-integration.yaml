@@ -3,6 +3,16 @@
     - run-devstack
     - run-contrail
   tasks:
+    - name: Install epel-release
+      become: yes
+      package:
+        name: epel-release
+
+    - name: Install Python3.6
+      become: yes
+      package:
+        name: python36
+
     - name: Execute noc-integration testing
       shell: |
         export CONTROLLER_IP={{ hostvars['controller'].ansible_default_ipv4.address }}
