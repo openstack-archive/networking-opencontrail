@@ -1,0 +1,23 @@
+# Exclude slow tests
+.*\[.*\bslow\b.*\]
+
+# Exclude stuff less releated to networking, to reduce gate load
+tempest\.api\.compute.*
+tempest\.api\.identity.*
+tempest\.api\.image.*
+tempest\.api\.object.*
+tempest\.api\.volume.*
+tempest\.scenario\.test_encrypted_cinder.*
+tempest\.scenario\.test_object.*
+tempest\.scenario\.test_server.*
+tempest\.scenario\.test_shelve_instance.*
+tempest\.scenario\.test_snapshot.*
+tempest\.scenario\.test_stamp.*
+tempest\.scenario\.test_volume.*
+
+# Exclude not supported features
+neutron_tempest_plugin\.api.*RBAC.*
+neutron_tempest_plugin\.api.*dns.*
+neutron_tempest_plugin\.api.*logging.*
+neutron_tempest_plugin\.api.*qos.*
+neutron_tempest_plugin\.api\.test_trunk.*
