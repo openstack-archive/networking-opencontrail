@@ -1,0 +1,72 @@
+---
+- name: Install required utilities
+  become: yes
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - python-pip
+    - git
+
+- name: Upgrade PIP to lates version
+  become: yes
+  pip:
+    name: pip
+    state: latest
+
+- name: Remove PyYAML distutils package
+  # due to error in PIP: Cannot uninstall 'PyYAML'. It is a distutlis insatlled project
+  # and thus we cannot accurately determine which files belong to it
+  # which would lead to only a partial uninstall.
+  # PyYAML is installed in task: 'Install python packages'
+  become: yes
+  yum:
+    name: PyYAML
+    state: removed
+
+- name: Install PyYAML using PIP
+  become: yes
+  pip:
+    name: PyYAML
+    state: present
+    extra_args: --ignore-installed
+
+- name: Install Ansible
+  # Must be installed after PyYAML
+  become: yes
+  yum:
+    name: ansible-2.4.2.0
+    state: present
+    allow_downgrade: yes
+
+- name: Add docker-ce repository
+  become: yes
+  shell: |
+    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  args:
+    executable: /bin/bash
+
+- name: Install docker
+  become: yes
+  yum:
+    name: docker-ce
+    state: present
+
+- name: Create /etc/docker directory
+  become: yes
+  file:
+    path: "/etc/docker"
+    state: directory
+
+- name: Create daemon.json config file for docker
+  become: yes
+  template:
+    src: docker_daemon.json.j2
+    dest: "/etc/docker/daemon.json"
+
+- name: Start docker daemon
+  become: yes
+  service:
+    name: docker
+    state: running
+    enabled: yes
