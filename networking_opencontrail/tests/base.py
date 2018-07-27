@@ -20,6 +20,9 @@ from keystoneauth1 import identity
 from keystoneauth1 import session
 from neutronclient.v2_0 import client as neutron
 from oslotest import base
+from keystoneclient.v3 import client
+import requests
+import uuid
 
 
 class TestCase(base.BaseTestCase):
@@ -41,5 +44,9 @@ class IntegrationTestCase(base.BaseTestCase):
                                    project_name='demo',
                                    project_domain_id='default',
                                    user_domain_id='default')
-        sess = session.Session(auth=auth, verify=False)
-        self.neutron = neutron.Client(session=sess, insecure=True)
+        sess = session.Session(auth=auth)
+        self.neutron = neutron.Client(session=sess)
+
+        keystone = client.Client(session=sess)
+        projs = [str(uuid.UUID(proj.id)) for proj in keystone.projects.list()]
+        [requests.get('http://{}:8082/project/{}'.format(controller_ip, id)) for id in projs]
