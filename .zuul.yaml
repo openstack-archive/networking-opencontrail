@@ -1,34 +1,65 @@
+---
+# TODO(paweł_zadrożny) remove voting:false from all noc-tempest* jobs when all defects are fixed
 - project:
+    name: openstack/networking-opencontrail
     check:
       jobs:
-        - contrail-integration
+        - noc-integration:
+            voting: false
+        - noc-tempest:
+            voting: false
+        - noc-tempest-neutron-plugin:
+            voting: false
     gate:
       jobs:
-        - contrail-integration
+        - noc-integration:
+            voting: false
+        - noc-tempest:
+            voting: false
+        - noc-tempest-neutron-plugin:
+            voting: false
+    periodic:
+      jobs:
+        - noc-integration:
+            branches:
+              - master
+              - ^stable/[a-z]+$
+        - noc-tempest-neutron-plugin:
+            branches:
+              - master
+              - ^stable/[a-z]+$
 
 - job:
-    name: contrail-integration
-    parent: devstack-platform-centos-7
-    description: |
-      Integration tests between devstack and opencontrail
-      using openstack/networking-opencontrail neutron plugin
-    required-projects:
-      - openstack/networking-opencontrail
-    voting: false
-    timeout: 10800
+    name: noc-base
+    parent: devstack-tempest
+    description: Networking-OpenContrail base job
+    post-run: playbooks/zuul/post.yaml
+    nodeset: devstack-single-node-centos-7
     roles:
       - zuul: openstack-dev/devstack
-    pre-run: zuul-playbooks/pre.yaml
-    run: zuul-playbooks/run.yaml
-    post-run: zuul-playbooks/post.yaml
+    timeout: 10080
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^releasenotes/.*$
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/tempest
+      - openstack/neutron-tempest-plugin
+      - openstack/networking-opencontrail
+      - openstack/glance
+      - openstack/keystone
+      - openstack/neutron
+      - openstack/nova
     vars:
-      run_devstack: True
       devstack_plugins:
-        networking-opencontrail: https://git.openstack.org/openstack/networking-opencontrail
+        networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
+      devstack_base_dir: /opt/stack
       devstack_localrc:
         DEBUG: True
         ADMIN_PASSWORD: admin
         HOST_IP: "{{hostvars['controller'].ansible_default_ipv4.address}}"
+        SERVICE_HOST: "{{hostvars['controller'].ansible_default_ipv4.address}}"
         OPENCONTRAIL_APISERVER_IP: "{{hostvars['controller'].ansible_default_ipv4.address}}"
         OPENCONTRAIL_APISERVER_PORT: 8082
         Q_USE_SECGROUP: True
@@ -92,15 +123,51 @@
         tempest: true
       devstack_local_conf:
         post-config:
+          $NEUTRON_CONF:
+            DEFAULT:
+              router_scheduler_driver: neutron.scheduler.l3_agent_scheduler.LeastRoutersScheduler
+              router_auto_schedule: true
           $NEUTRON_CORE_PLUGIN_CONF:
             ml2:
-              type_drivers: local,flat,vlan,gre,vxlan,geneve
-              tenant_network_types: vlan
+              type_drivers: vlan,vxlan
+              tenant_network_types: vlan,vxlan
               extension_drivers: port_security
               mechanism_drivers: opencontrail,openvswitch,linuxbridge
             ml2_type_vlan:
               network_vlan_ranges: public:1:1000
             ml2_type_vxlan:
               vni_ranges: 1:1000
-            ml2_type_gre:
-              tunnel_id_ranges: 1:1000
+
+- job:
+    name: noc-integration
+    parent: noc-base
+    description: Integration tests between devstack and opencontrail
+    run: playbooks/zuul/noc-integration.yaml
+    vars:
+      tox_envlist: integration
+
+- job:
+    name: noc-tempest
+    parent: noc-base
+    description: Tempest network tests
+    run: playbooks/zuul/noc-tempest.yaml
+    vars:
+      test-config:
+        $TEMPEST_CONFIG:
+          network:
+            project_networks_reachable: true
+          neutron_plugin_options:
+            available_type_drivers: vlan,vxlan
+      tox_envlist: all-plugin
+      tempest_test_regex: (?x)^tempest\.(api|scenario).*$
+      tempest_test_blacklist: "{{devstack_base_dir}}/networking-opencontrail/tempest-blacklist.txt"
+
+- job:
+    name: noc-tempest-neutron-plugin
+    parent: noc-tempest
+    description: Tempest neutron plugin tests
+    vars:
+      devstack_plugins:
+        networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
+        neutron-tempest-plugin: git://git.openstack.org/openstack/neutron-tempest-plugin
+      tempest_test_regex: (?x)^neutron_tempest_plugin.*$
