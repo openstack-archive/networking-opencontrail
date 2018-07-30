@@ -18,47 +18,33 @@ from networking_opencontrail.tests.base import IntegrationTestCase
 
 
 class TestManageNetwork(IntegrationTestCase):
-    def setUp(self):
-        super(TestManageNetwork, self).setUp()
-        self.api_virtual_nets = '{}/virtual-networks'.format(self.contrail_api)
-
-    @staticmethod
-    def find_network(name, networks):
-        """Iterate over virtual-networks list obtained from OpenContrail API.
-
-        Lookup for network name in fq_name list.
-        """
-        for net in networks:
-            if name in net['fq_name']:
-                result = requests.get(net['href']).json()
-                return result['virtual-network']
-        return None
-
-    def test_contrail_synchronized_projects(self):
-        pass
-
     def test_create_vlan_network(self):
         """Create vlan network using openstack CLI.
 
         Check if network exists in OpenContrail and all properties are
         the same as used in create command call.
         """
-        network = {
-            'name': 'test_public_1',
-            'provider:network_type': 'vlan',
-            'provider:segmentation_id': 10,
-            'provider:physical_network': 'public',
-            'admin_state_up': True
+        network = self.neutron.create_network({
+            'network': {
+                'name': 'test_public_1',
+                'provider:network_type': 'vlan',
+                'provider:segmentation_id': 10,
+                'provider:physical_network': 'public',
+                'admin_state_up': True,
+            },
+        })
+        contrail_network = self.contrail_network_get(['network']['id'])
+
+        expected_network_subdict = {
+            'segmentation_id': network['network']['provider:segmentation_id'],
+            'physical_network': network['network']['provider:physical_network']
         }
-        self.neutron.create_network({'network': network})
 
-        result = requests.get(self.api_virtual_nets).json()
-        check_network = self.find_network(network['name'],
-                                          result['virtual-networks'])
+        self.assertDictEqual(contrail_network['provider_properties'],
+                             expected_network_subdict)
 
-        self.assertIsNotNone(check_network)  # check if network exists first
-        self.assertEqual(check_network['name'], network['name'])
-        self.assertDictEqual(
-            check_network['provider_properties'],
-            {'segmentation_id': network['provider:segmentation_id'],
-             'physical_network': network['provider:physical_network']})
+    def contrail_network_get(self, network_id):
+        url = '{}/virtual-network/{}'.format(self.contrail_api, network_id)
+        network_result = requests.get(url)
+        self.assertIn(network_result.status_code, {200, 301, 302, 303, 304})
+        return network_result.json().get('virtual-network')
