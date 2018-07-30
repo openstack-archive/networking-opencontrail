@@ -15,9 +15,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import os
+import requests
+import uuid
 
 from keystoneauth1 import identity
 from keystoneauth1 import session
+from keystoneclient.v3 import client
 from neutronclient.v2_0 import client as neutron
 from oslotest import base
 
@@ -41,5 +44,12 @@ class IntegrationTestCase(base.BaseTestCase):
                                    project_name='demo',
                                    project_domain_id='default',
                                    user_domain_id='default')
-        sess = session.Session(auth=auth, verify=False)
-        self.neutron = neutron.Client(session=sess, insecure=True)
+        sess = session.Session(auth=auth)
+        self.neutron = neutron.Client(session=sess)
+
+        # Requesting contrail for keystone projects enforces contrail
+        # to synchronize them
+        keystone = client.Client(session=sess)
+        projs = [str(uuid.UUID(proj.id)) for proj in keystone.projects.list()]
+        url = 'http://{}:8082/project/{}'
+        [requests.get(url.format(self.contrail_api, p_id)) for p_id in projs]
