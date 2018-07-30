@@ -16,7 +16,7 @@ import requests
 
 from oslo_config import cfg
 
-import constants
+from networking_opencontrail.common import constants
 
 vnc_opts = [
     cfg.StrOpt('api_server_ip',

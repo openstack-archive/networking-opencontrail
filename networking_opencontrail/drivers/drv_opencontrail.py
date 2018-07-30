@@ -29,7 +29,7 @@ from oslo_serialization import jsonutils as json
 from eventlet.greenthread import getcurrent
 from simplejson import JSONDecodeError
 
-import contrail_driver_base as driver_base
+from networking_opencontrail.drivers import contrail_driver_base as driver_base
 
 _DEFAULT_KS_CERT_BUNDLE = "/tmp/keystonecertbundle.pem"
 _DEFAULT_API_CERT_BUNDLE = "/tmp/apiservercertbundle.pem"
@@ -40,7 +40,6 @@ LOG = logging.getLogger(__name__)
 
 
 class OpenContrailDrivers(driver_base.OpenContrailDriversBase):
-
     PLUGIN_URL_PREFIX = '/neutron'
 
     def __init__(self):
@@ -111,9 +110,11 @@ class OpenContrailDrivers(driver_base.OpenContrailDriversBase):
             self._use_api_certs = True
 
     def _request_api_server(self, url, data=None, headers=None):
-        LOG.debug("Api-Server request:\n"
-                  "URL: %(url)s\nHeaders: %(heads)s\nPayload: %(payload)s\n",
-                  {'url': url, 'heads': headers, 'payload': data})
+        LOG.debug('Api-Server request:\n'
+                  'URL: %(url)s\n'
+                  'Headers: %(headers)s\n'
+                  'Payload: %(payload)s\n',
+                  {'url': url, 'headers': headers, 'payload': data})
 
         # Attempt to post to Api-Server
         if self._apiinsecure:
@@ -155,11 +156,15 @@ class OpenContrailDrivers(driver_base.OpenContrailDriversBase):
             else:
                 raise RuntimeError('Authentication Failure')
 
+        LOG.debug('Api-Server response:\n'
+                  'Status: %(status)s\n'
+                  'Payload: %(payload)s\n',
+                  {'status': response.status_code,
+                   'payload': response.content})
         if response.status_code != requests.codes.ok:
-            LOG.error("Api-Server response:\n"
-                      "Status: %(status)s\nPayload: %(payload)s\n",
-                      {'status': response.status_code,
-                       'payload': response.content})
+            LOG.error('Api-Server request for %(url)s '
+                      'failed with status %(status)s',
+                      {'url': url, 'status': response.status_code})
 
         return response
 
@@ -251,7 +256,7 @@ class OpenContrailDrivers(driver_base.OpenContrailDriversBase):
         contrail api server.
         """
 
-        for key, value in res_data[res_type].items():
+        for key, value in res_data[res_type].copy().items():
             if value == ATTR_NOT_SPECIFIED:
                 del res_data[res_type][key]
 
