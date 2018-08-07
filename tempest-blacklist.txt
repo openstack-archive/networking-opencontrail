@@ -19,5 +19,7 @@ tempest\.scenario\.test_volume.*
 neutron_tempest_plugin\.api.*RBAC.*
 neutron_tempest_plugin\.api.*dns.*
 neutron_tempest_plugin\.api.*logging.*
-neutron_tempest_plugin\.api.*qos.*
 neutron_tempest_plugin\.api\.test_trunk.*
+neutron_tempest_plugin.*qos.*
+neutron_tempest_plugin.*TrunkTestJSON.*
+neutron_tempest_plugin\.scenario\.test_floatingip\.FloatingIPQosTest
