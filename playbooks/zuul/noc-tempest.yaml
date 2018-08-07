@@ -8,6 +8,22 @@
 
 # We run tests only on one node, regardless how many nodes are in the system
 - hosts: tempest
+  pre_tasks:
+    - name: Create Public external network
+      # DevStack has been configured to not create default networks while stacking
+      # This will cause oslo.config to pass empty string instead of UUID
+      # to every test which needs public network.
+      shell: |
+        set -e
+        set -x
+        source openrc admin admin; \
+        openstack network create --provider-network-type vlan \
+                                 --provider-segment 1200 \
+                                 --provider-physical-network public \
+                                 --external --share --enable --default ext-public
+      args:
+        chdir: "{{ devstack_base_dir }}/devstack"
+        executable: /bin/bash
   roles:
     - setup-tempest-run-dir
     - setup-tempest-data-dir
