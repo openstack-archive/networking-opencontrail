@@ -198,7 +198,16 @@ class OpenContrailDrivers(driver_base.OpenContrailDriversBase):
         data = json.dumps({'context': context_dict, 'data': data_dict})
 
         url_path = "%s/%s" % (self.PLUGIN_URL_PREFIX, obj_name)
-        response = self._relay_request(url_path, data=data)
+        try:
+            response = self._relay_request(url_path, data=data)
+        except ConnectionError as exc:
+            # Catch connection error because SDN may not be ready
+            # to receive messages. This must not crash OpenStack.
+            # Common scenario is when OpenStack is up and running first
+            # and SDN comes up and synchronize data later.
+            LOG.error("Can't connect to remote host:\n", exc)
+            return requests.codes.unavailable, {'message': str(exc)}
+
         try:
             return response.status_code, response.json()
         except JSONDecodeError:
