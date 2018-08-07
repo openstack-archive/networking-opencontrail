@@ -167,28 +167,17 @@ class OpenContrailDriversBase(object):
     def create_subnet(self, context, subnet):
         """Creates a new subnet, and assigns it a symbolic name."""
 
-        if subnet['subnet']['gateway_ip'] is None:
-            gateway = '0.0.0.0'
-            if subnet['subnet']['ip_version'] == 6:
-                gateway = '::'
-            subnet['subnet']['gateway_ip'] = gateway
-
         if subnet['subnet']['host_routes'] != ATTR_NOT_SPECIFIED:
             if (len(subnet['subnet']['host_routes']) >
                     cfg.CONF.max_subnet_host_routes):
-                raise neutron_exc.HostRoutesExhausted(subnet_id=subnet[
-                    'subnet'].get('id', _('new subnet')),
+                raise neutron_exc.HostRoutesExhausted(
+                    subnet_id=subnet['subnet'].get('id', _('new subnet')),
                     quota=cfg.CONF.max_subnet_host_routes)
 
-        subnet_created = self._create_resource('subnet', context, subnet)
-        return self._make_subnet_dict(subnet_created)
-
-    def _make_subnet_dict(self, subnet):
-        return subnet
+        return self._create_resource('subnet', context, subnet)
 
     def _get_subnet(self, context, subnet_id, fields=None):
-        subnet = self._get_resource('subnet', context, subnet_id, fields)
-        return self._make_subnet_dict(subnet)
+        return self._get_resource('subnet', context, subnet_id, fields)
 
     def get_subnet(self, context, subnet_id, fields=None):
         """Gets the attributes of a particular subnet."""
@@ -198,8 +187,7 @@ class OpenContrailDriversBase(object):
     def update_subnet(self, context, subnet_id, subnet):
         """Updates the attributes of a particular subnet."""
 
-        subnet = self._update_resource('subnet', context, subnet_id, subnet)
-        return self._make_subnet_dict(subnet)
+        return self._update_resource('subnet', context, subnet_id, subnet)
 
     def delete_subnet(self, context, subnet_id):
         """Delete a subnet.
@@ -213,9 +201,7 @@ class OpenContrailDriversBase(object):
     def get_subnets(self, context, filters=None, fields=None):
         """Gets the list of subnets."""
 
-        return [self._make_subnet_dict(s)
-                for s in self._list_resource(
-                    'subnet', context, filters, fields)]
+        return self._list_resource('subnet', context, filters, fields)
 
     def get_subnets_count(self, context, filters=None):
         """Gets the count of subnets."""
