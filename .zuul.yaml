@@ -64,18 +64,22 @@
         networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
       devstack_base_dir: /opt/stack
       devstack_localrc:
-        DEBUG: True
+        DEBUG: true
         ADMIN_PASSWORD: admin
         HOST_IP: "{{hostvars['controller'].ansible_default_ipv4.address}}"
         SERVICE_HOST: "{{hostvars['controller'].ansible_default_ipv4.address}}"
         OPENCONTRAIL_APISERVER_IP: "{{hostvars['controller'].ansible_default_ipv4.address}}"
         OPENCONTRAIL_APISERVER_PORT: 8082
-        Q_USE_SECGROUP: True
+        Q_USE_SECGROUP: true
         Q_PLUGIN: ml2
         ML2_L3_PLUGIN: opencontrail-router
-        NEUTRON_CREATE_INITIAL_NETWORKS: False
+        NEUTRON_CREATE_INITIAL_NETWORKS: false
         PUBLIC_PHYSICAL_NETWORK: public
-        USE_SSL: False
+        PHYSICAL_NETWORK: default
+        PROVIDER_NETWORK_TYPE: vlan
+        USE_SSL: false
+        FLOATING_RANGE: 172.24.0.0/16
+        PUBLIC_NETWORK_GATEWAY: 172.24.0.1
       devstack_services:
         # Shared services
         dstat: true
@@ -135,16 +139,24 @@
             DEFAULT:
               router_scheduler_driver: neutron.scheduler.l3_agent_scheduler.LeastRoutersScheduler
               router_auto_schedule: true
+              enable_snat_by_default: false
+            quotas:
+              # A negative value means unlimited. (integer value)
+              quota_network: -1
+              quota_subnet: -1
+              quota_port: -1
+              quota_router: -1
+              quota_floatingip: -1
+              quota_security_group: -1
+              quota_security_group_rule: -1
           $NEUTRON_CORE_PLUGIN_CONF:
             ml2:
-              type_drivers: vlan,vxlan
-              tenant_network_types: vlan,vxlan
+              type_drivers: vlan,local
+              tenant_network_types: vlan,local
               extension_drivers: port_security
               mechanism_drivers: opencontrail,openvswitch,linuxbridge
             ml2_type_vlan:
               network_vlan_ranges: public:1:1000
-            ml2_type_vxlan:
-              vni_ranges: 1:1000
 
 - job:
     name: noc-integration
@@ -160,12 +172,11 @@
     description: Tempest network tests
     run: playbooks/zuul/noc-tempest.yaml
     vars:
-      test-config:
-        $TEMPEST_CONFIG:
-          network:
-            project_networks_reachable: true
-          neutron_plugin_options:
-            available_type_drivers: vlan,vxlan
+      devstack_local_conf:
+        test-config:
+          $TEMPEST_CONFIG:
+            network:
+              project_networks_reachable: true
       tox_envlist: all-plugin
       tempest_test_regex: (?x)^tempest\.(api|scenario).*$
       tempest_test_blacklist: "{{devstack_base_dir}}/networking-opencontrail/tempest-blacklist.txt"
@@ -175,6 +186,13 @@
     parent: noc-tempest
     description: Tempest neutron plugin tests
     vars:
+      devstack_local_conf:
+        test-config:
+          $TEMPEST_CONFIG:
+            network:
+              project_networks_reachable: true
+            neutron_plugin_options:
+              available_type_drivers: vlan,local
       devstack_plugins:
         networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
         neutron-tempest-plugin: git://git.openstack.org/openstack/neutron-tempest-plugin
