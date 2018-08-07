@@ -14,10 +14,16 @@ tempest\.scenario\.test_shelve_instance.*
 tempest\.scenario\.test_snapshot.*
 tempest\.scenario\.test_stamp.*
 tempest\.scenario\.test_volume.*
+.*reboot.*
+.*traffic.*
+.*instance.*
 
 # Exclude not supported features
-neutron_tempest_plugin\.api.*RBAC.*
-neutron_tempest_plugin\.api.*dns.*
-neutron_tempest_plugin\.api.*logging.*
-neutron_tempest_plugin\.api.*qos.*
-neutron_tempest_plugin\.api\.test_trunk.*
+.*snat.*
+.*RBAC.*
+.*dns.*
+.*logging.*
+.*trunk.*
+.*qos.*
+neutron_tempest_plugin.*TrunkTestJSON.*
+neutron_tempest_plugin\.scenario\.test_floatingip\.FloatingIPQosTest
