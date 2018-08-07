@@ -18,7 +18,7 @@ from networking_opencontrail.tests.base import IntegrationTestCase
 
 
 class TestManageNetwork(IntegrationTestCase):
-    def test_create_vlan_network(self):
+    def test_create_vlan_network_and_subnet(self):
         """Create vlan network using openstack CLI.
 
         Check if network exists in OpenContrail and all properties are
@@ -33,13 +33,21 @@ class TestManageNetwork(IntegrationTestCase):
                 'admin_state_up': True,
             },
         })
-        contrail_network = self.contrail_network_get(network['network']['id'])
+        self.neutron.create_subnet({
+            'subnet': {
+                'name': 'test_subnet_1',
+                'cidr': '192.168.2.0/24',
+                'network_id': network['network']['id'],
+                'gateway_ip': None,
+                'ip_version': 4,
+            }
+        })
 
+        contrail_network = self.contrail_network_get(network['network']['id'])
         expected_network_subdict = {
             'segmentation_id': network['network']['provider:segmentation_id'],
             'physical_network': network['network']['provider:physical_network']
         }
-
         self.assertDictEqual(contrail_network['provider_properties'],
                              expected_network_subdict)
 
