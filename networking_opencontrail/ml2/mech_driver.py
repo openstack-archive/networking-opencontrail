@@ -158,8 +158,14 @@ class OpenContrailMechDriver(api.MechanismDriver):
 
     def create_security_group(self, context, sg):
         """Create a Security Group in OpenContrail."""
-        sec_g = {}
-        sec_g['security_group'] = sg
+
+        # vnc_openstack do not allow to create default security group
+        if sg['name'] == 'default':
+            sg['name'] = 'default-openstack'
+            sg['description'] = 'default-openstack'
+
+        sec_g = {'security_group': sg}
+
         try:
             self.drv.create_security_group(context, sec_g)
         except Exception:
