@@ -23,9 +23,6 @@ from neutron_lib.exceptions import l3
 from neutron_lib.api.definitions.portbindings import CAP_PORT_FILTER
 from neutron_lib.constants import ATTR_NOT_SPECIFIED
 from neutron_lib.constants import PORT_STATUS_ACTIVE
-# from neutron_lib.exceptions import InvalidInput
-# from neutron_lib.exceptions import NeutronException
-# from neutron_lib.exceptions import ServiceUnavailable
 from neutron_lib import exceptions as neutron_lib_exc
 
 from oslo_config import cfg
@@ -52,8 +49,6 @@ def _raise_contrail_error(info, obj_name):
                 info['resource'] = obj_name
             if exc_name == 'VirtualRouterNotFound':
                 raise exceptions.HttpResponseError(info)
-            if hasattr(neutron_exc, exc_name):
-                raise getattr(neutron_exc, exc_name)(**info)
             if hasattr(l3, exc_name):
                 raise getattr(l3, exc_name)(**info)
             if hasattr(securitygroup, exc_name):
@@ -62,6 +57,14 @@ def _raise_contrail_error(info, obj_name):
                 raise getattr(allowedaddresspairs, exc_name)(**info)
             if neutron_lib_exc and hasattr(neutron_lib_exc, exc_name):
                 raise getattr(neutron_lib_exc, exc_name)(**info)
+            # TenantIdProjectIdFilterConflict is in two places right now.
+            # One declaration is in neutron_lib.exceptions
+            # and second one in neutron.common.exceptions.
+            # While review https://review.openstack.org/#/c/591818 is open
+            # we need to move neutron_exc checking at the end of the list
+            # to avoid exception handlers errors.
+            if hasattr(neutron_exc, exc_name):
+                raise getattr(neutron_exc, exc_name)(**info)
         raise neutron_lib_exc.NeutronException(**info)
 
 

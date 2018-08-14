@@ -18,9 +18,9 @@ import logging
 import mock
 import requests
 
-from neutron.common import exceptions as neutron_exc
 from neutron.tests.unit.extensions import base as test_extensions_base
 from neutron_lib.constants import ATTR_NOT_SPECIFIED
+from neutron_lib import exceptions
 
 from networking_opencontrail.drivers import drv_opencontrail
 
@@ -212,7 +212,7 @@ class ApiRequestsTestCases(test_extensions_base.ExtensionTestCase):
             'exception': 'TenantIdProjectIdFilterConflict',
         }
 
-        self.assertRaises(neutron_exc.TenantIdProjectIdFilterConflict,
+        self.assertRaises(exceptions.TenantIdProjectIdFilterConflict,
                           driver._transform_response,
                           code, info)
 
