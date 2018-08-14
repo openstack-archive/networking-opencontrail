@@ -16,7 +16,6 @@
 import logging
 import mock
 
-from neutron.common import exceptions as neutron_exc
 from neutron.extensions import securitygroup
 from neutron.tests.unit.extensions import base as test_extensions_base
 from neutron_lib.constants import ATTR_NOT_SPECIFIED
@@ -69,7 +68,7 @@ class ErrorTestCases(test_extensions_base.ExtensionTestCase):
         info = self._get_info('SubnetPoolNotFound')
         info['subnetpool_id'] = "123chips"
 
-        self.assertRaises(neutron_exc.SubnetPoolNotFound,
+        self.assertRaises(exceptions.SubnetPoolNotFound,
                           base._raise_contrail_error,
                           info, None)
 
@@ -278,7 +277,7 @@ class SubnetTestCases(test_extensions_base.ExtensionTestCase):
         context = mock.Mock()
         config.max_subnet_host_routes = 0
 
-        self.assertRaises(neutron_exc.HostRoutesExhausted,
+        self.assertRaises(exceptions.HostRoutesExhausted,
                           drv.create_subnet, context, subnet)
 
     @mock.patch("oslo_config.cfg.CONF")
