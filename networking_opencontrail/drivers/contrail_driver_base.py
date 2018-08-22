@@ -23,9 +23,6 @@ from neutron_lib.exceptions import l3
 from neutron_lib.api.definitions.portbindings import CAP_PORT_FILTER
 from neutron_lib.constants import ATTR_NOT_SPECIFIED
 from neutron_lib.constants import PORT_STATUS_ACTIVE
-# from neutron_lib.exceptions import InvalidInput
-# from neutron_lib.exceptions import NeutronException
-# from neutron_lib.exceptions import ServiceUnavailable
 from neutron_lib import exceptions as neutron_lib_exc
 
 from oslo_config import cfg
@@ -52,8 +49,6 @@ def _raise_contrail_error(info, obj_name):
                 info['resource'] = obj_name
             if exc_name == 'VirtualRouterNotFound':
                 raise exceptions.HttpResponseError(info)
-            if hasattr(neutron_exc, exc_name):
-                raise getattr(neutron_exc, exc_name)(**info)
             if hasattr(l3, exc_name):
                 raise getattr(l3, exc_name)(**info)
             if hasattr(securitygroup, exc_name):
@@ -62,6 +57,12 @@ def _raise_contrail_error(info, obj_name):
                 raise getattr(allowedaddresspairs, exc_name)(**info)
             if neutron_lib_exc and hasattr(neutron_lib_exc, exc_name):
                 raise getattr(neutron_lib_exc, exc_name)(**info)
+            # Few exceptions from neutron.common module are being moved
+            # to neutron_lib.exceptions module leaving duplications.
+            # Neutron_lib must have precedence over neutron.common.
+            # That's why this check must be done at the very end.
+            if hasattr(neutron_exc, exc_name):
+                raise getattr(neutron_exc, exc_name)(**info)
         raise neutron_lib_exc.NeutronException(**info)
 
 
@@ -176,8 +177,8 @@ class OpenContrailDriversBase(object):
         if subnet['subnet']['host_routes'] != ATTR_NOT_SPECIFIED:
             if (len(subnet['subnet']['host_routes']) >
                     cfg.CONF.max_subnet_host_routes):
-                raise neutron_exc.HostRoutesExhausted(subnet_id=subnet[
-                    'subnet'].get('id', _('new subnet')),
+                raise neutron_lib_exc.HostRoutesExhausted(
+                    subnet_id=subnet['subnet'].get('id', _('new subnet')),
                     quota=cfg.CONF.max_subnet_host_routes)
 
         subnet_created = self._create_resource('subnet', context, subnet)
