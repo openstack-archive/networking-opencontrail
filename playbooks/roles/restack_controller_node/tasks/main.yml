@@ -1,0 +1,11 @@
+---
+- name: optionally unstack
+  shell: ./unstack.sh
+  args:
+    chdir: ~/devstack
+  ignore_errors: yes
+
+- name: build OpenStack via stack.sh
+  command: ./stack.sh
+  args:
+    chdir: ~/devstack
