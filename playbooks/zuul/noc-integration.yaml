@@ -1,44 +1,46 @@
 - hosts: controller
   roles:
-    - run-devstack
-    - run-contrail
-  tasks:
-    - name: Install ius-release
-      become: yes
-      yum:
-        name: https://centos7.iuscommunity.org/ius-release.rpm
-        state: present
-        update_cache: yes
+    # - run-devstack
+    # - run-contrail
+    - { role: 'playbooks/roles/test_roles_run' }
+    - test-old
+  # tasks:
+  #   - name: Install ius-release
+  #     become: yes
+  #     yum:
+  #       name: https://centos7.iuscommunity.org/ius-release.rpm
+  #       state: present
+  #       update_cache: yes
 
-    - name: Install Python3.6
-      become: yes
-      yum:
-        name: "{{ item }}"
-        state: present
-      with_items:
-        - python36u
-        - python36u-devel
-        - python36u-pip
-        - python36u-setuptools
+  #   - name: Install Python3.6
+  #     become: yes
+  #     yum:
+  #       name: "{{ item }}"
+  #       state: present
+  #     with_items:
+  #       - python36u
+  #       - python36u-devel
+  #       - python36u-pip
+  #       - python36u-setuptools
 
-    - name: Create symlink on Python3
-      # Python36 installation don't create Python3 symlink which is used by tox.
-      # Ignore_errors flag is set to yes, in case this is going to change.
-      become: yes
-      file:
-        src: /usr/bin/python3.6
-        dest: /usr/bin/python3
-        state: link
-      ignore_errors: yes
+  #   - name: Create symlink on Python3
+  #     # Python36 installation don't create Python3 symlink which is used by tox.
+  #     # Ignore_errors flag is set to yes, in case this is going to change.
+  #     become: yes
+  #     file:
+  #       src: /usr/bin/python3.6
+  #       dest: /usr/bin/python3
+  #       state: link
+  #     ignore_errors: yes
 
-    - name: Execute noc-integration testing
-      shell: |
-        export CONTROLLER_IP={{ hostvars['controller'].ansible_default_ipv4.address }}
-        tox -vv -e integration
-      args:
-        chdir: "{{ zuul.project.src_dir }}"
-        executable: /bin/bash
+  #   - name: Execute noc-integration testing
+  #     shell: |
+  #       export CONTROLLER_IP={{ hostvars['controller'].ansible_default_ipv4.address }}
+  #       tox -vv -e integration
+  #     args:
+  #       chdir: "{{ zuul.project.src_dir }}"
+  #       executable: /bin/bash
 
-    - name: Pause execution to make sure workers flushed all logs before stoping
-      pause:
-        seconds: 30
+  #   - name: Pause execution to make sure workers flushed all logs before stoping
+  #     pause:
+  #       seconds: 30
