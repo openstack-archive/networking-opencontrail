@@ -1,0 +1,10 @@
+---
+- name: Print debug
+  debug: 
+    msg: "Run role from subcatalog"
+
+- name: Make error
+  shell: |
+    set -x
+    set -e
+    echo "New catalog" > "{{ zuul.executor.log_root }}/test_output"
