@@ -1,0 +1,4 @@
+---
+- name: Print debug
+  debug: 
+    msg: "Run role from subcatalog"
