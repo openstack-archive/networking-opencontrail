@@ -16,6 +16,11 @@
   retries: 30
   delay: 5
 
+- name: Copy vrouter
+  become: yes
+  shell: |
+    docker cp vrouter_vrouter-agent_1:/usr/bin/vrouter-port-control /usr/bin/
+
 - name: Run contrail-status
   shell: |
     contrail-status
