@@ -225,7 +225,7 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
 
     def test_create_security_group(self):
         ctx = fake_plugin_context('ten-1')
-        sg = {'id': 'sg-1'}
+        sg = {'id': 'sg-1', 'name': 'test-security-group'}
         self.drv.create_security_group(ctx, sg)
 
         expected_calls = [

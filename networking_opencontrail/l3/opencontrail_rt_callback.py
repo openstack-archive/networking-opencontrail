@@ -240,7 +240,7 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
             with session.begin(subtransactions=True):
                 try:
                     super(OpenContrailRouterHandler, self).update_floatingip(
-                        context, floatingip_id, old_fip)
+                        context, floatingip_id, {'floatingip': old_fip})
                 except Exception as e:
                     LOG.error("Failed to repair floating ip %(id)s: "
                               "%(err)s", {"id": floatingip_id, "err": e})

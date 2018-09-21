@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import ipaddress
+from six import u as unicode
 
 from neutron.common import exceptions as neutron_exc
 from neutron.db import quota_db  # noqa
@@ -43,27 +45,27 @@ NEUTRON_CONTRAIL_PREFIX = 'NEUTRON'
 
 
 def _raise_contrail_error(info, obj_name):
-        exc_name = info.get('exception')
-        if exc_name:
-            if exc_name == 'BadRequest' and 'resource' not in info:
-                info['resource'] = obj_name
-            if exc_name == 'VirtualRouterNotFound':
-                raise exceptions.HttpResponseError(info)
-            if hasattr(l3, exc_name):
-                raise getattr(l3, exc_name)(**info)
-            if hasattr(securitygroup, exc_name):
-                raise getattr(securitygroup, exc_name)(**info)
-            if hasattr(allowedaddresspairs, exc_name):
-                raise getattr(allowedaddresspairs, exc_name)(**info)
-            if neutron_lib_exc and hasattr(neutron_lib_exc, exc_name):
-                raise getattr(neutron_lib_exc, exc_name)(**info)
-            # Few exceptions from neutron.common module are being moved
-            # to neutron_lib.exceptions module leaving duplications.
-            # Neutron_lib must have precedence over neutron.common.
-            # That's why this check must be done at the very end.
-            if hasattr(neutron_exc, exc_name):
-                raise getattr(neutron_exc, exc_name)(**info)
-        raise neutron_lib_exc.NeutronException(**info)
+    exc_name = info.get('exception')
+    if exc_name:
+        if exc_name == 'BadRequest' and 'resource' not in info:
+            info['resource'] = obj_name
+        if exc_name == 'VirtualRouterNotFound':
+            raise exceptions.HttpResponseError(info)
+        if hasattr(l3, exc_name):
+            raise getattr(l3, exc_name)(**info)
+        if hasattr(securitygroup, exc_name):
+            raise getattr(securitygroup, exc_name)(**info)
+        if hasattr(allowedaddresspairs, exc_name):
+            raise getattr(allowedaddresspairs, exc_name)(**info)
+        if neutron_lib_exc and hasattr(neutron_lib_exc, exc_name):
+            raise getattr(neutron_lib_exc, exc_name)(**info)
+        # Few exceptions from neutron.common module are being moved
+        # to neutron_lib.exceptions module leaving duplications.
+        # Neutron_lib must have precedence over neutron.common.
+        # That's why this check must be done at the very end.
+        if hasattr(neutron_exc, exc_name):
+            raise getattr(neutron_exc, exc_name)(**info)
+    raise neutron_lib_exc.NeutronException(**info)
 
 
 class OpenContrailDriversBase(object):
@@ -168,28 +170,25 @@ class OpenContrailDriversBase(object):
     def create_subnet(self, context, subnet):
         """Creates a new subnet, and assigns it a symbolic name."""
 
-        if subnet['subnet']['gateway_ip'] is None:
-            gateway = '0.0.0.0'
-            if subnet['subnet']['ip_version'] == 6:
-                gateway = '::'
-            subnet['subnet']['gateway_ip'] = gateway
-
         if subnet['subnet']['host_routes'] != ATTR_NOT_SPECIFIED:
             if (len(subnet['subnet']['host_routes']) >
-                    cfg.CONF.max_subnet_host_routes):
+               cfg.CONF.max_subnet_host_routes):
                 raise neutron_lib_exc.HostRoutesExhausted(
                     subnet_id=subnet['subnet'].get('id', _('new subnet')),
                     quota=cfg.CONF.max_subnet_host_routes)
+        if ('allocation_pools' in subnet['subnet']
+                and subnet['subnet']['allocation_pools'][0]):
+            # THIS IS ONLY WORKAROUND
+            # it should +1 only if there's a conflict with contrail dns ip
+            # TODO(maciej.jagiello) Change workaround to a permanent solution
+            start = unicode(subnet['subnet']['allocation_pools'][0]['start'])
+            start_wout_dns = str(ipaddress.ip_address(start) + 1)
+            subnet['subnet']['allocation_pools'][0]['start'] = start_wout_dns
 
-        subnet_created = self._create_resource('subnet', context, subnet)
-        return self._make_subnet_dict(subnet_created)
-
-    def _make_subnet_dict(self, subnet):
-        return subnet
+        return self._create_resource('subnet', context, subnet)
 
     def _get_subnet(self, context, subnet_id, fields=None):
-        subnet = self._get_resource('subnet', context, subnet_id, fields)
-        return self._make_subnet_dict(subnet)
+        return self._get_resource('subnet', context, subnet_id, fields)
 
     def get_subnet(self, context, subnet_id, fields=None):
         """Gets the attributes of a particular subnet."""
@@ -199,8 +198,7 @@ class OpenContrailDriversBase(object):
     def update_subnet(self, context, subnet_id, subnet):
         """Updates the attributes of a particular subnet."""
 
-        subnet = self._update_resource('subnet', context, subnet_id, subnet)
-        return self._make_subnet_dict(subnet)
+        return self._update_resource('subnet', context, subnet_id, subnet)
 
     def delete_subnet(self, context, subnet_id):
         """Delete a subnet.
@@ -214,9 +212,7 @@ class OpenContrailDriversBase(object):
     def get_subnets(self, context, filters=None, fields=None):
         """Gets the list of subnets."""
 
-        return [self._make_subnet_dict(s)
-                for s in self._list_resource(
-                    'subnet', context, filters, fields)]
+        return self._list_resource('subnet', context, filters, fields)
 
     def get_subnets_count(self, context, filters=None):
         """Gets the count of subnets."""
@@ -264,8 +260,8 @@ class OpenContrailDriversBase(object):
         # Remove all of the intersecting elements
         for original_ip in original_ips[:]:
             for new_ip in new_ips[:]:
-                if ('ip_address' in new_ip and
-                        original_ip['ip_address'] == new_ip['ip_address']):
+                if ('ip_address' in new_ip
+                        and original_ip['ip_address'] == new_ip['ip_address']):
                     original_ips.remove(original_ip)
                     new_ips.remove(new_ip)
                     prev_ips.append(original_ip)
@@ -275,9 +271,16 @@ class OpenContrailDriversBase(object):
     def create_port(self, context, port):
         """Creates a port on the specified Virtual Network."""
 
-        if (port['port'].get('port_security_enabled') is False and
-                port['port'].get('allowed_address_pairs') == []):
+        if (port['port'].get('port_security_enabled') is False
+                and port['port'].get('allowed_address_pairs') == []):
             del port['port']['allowed_address_pairs']
+
+        if (port.get('data') and not port['data']['resource']['tenant_id']
+                and context['tenant_id']):
+            port['data']['resource']['tenant_id'] = context['tenant_id']
+        elif (port.get('port') and 'tenant_id' not in port['port']
+                and context.tenant_id):
+            port['port']['tenant_id'] = context.tenant_id
 
         port = self._create_resource('port', context, port)
 
@@ -294,7 +297,6 @@ class OpenContrailDriversBase(object):
         Updates the attributes of a port on the specified Virtual
         Network.
         """
-
         original = self._get_port(context, port_id)
         if 'fixed_ips' in port['port']:
             added_ips, prev_ips = self._update_ips_for_port(
@@ -305,8 +307,8 @@ class OpenContrailDriversBase(object):
         if 'binding:host_id' in port['port']:
             original['binding:host_id'] = port['port']['binding:host_id']
 
-        if (port['port'].get('port_security_enabled') is False and
-                port['port'].get('allowed_address_pairs') == []):
+        if (port['port'].get('port_security_enabled') is False
+                and port['port'].get('allowed_address_pairs') == []):
             del port['port']['allowed_address_pairs']
 
         return self._update_resource('port', context, port_id, port)
@@ -344,11 +346,8 @@ class OpenContrailDriversBase(object):
         port_status = port.get('status', PORT_STATUS_ACTIVE)
 
         for segment in context.segments_to_bind:
-            context.set_binding(
-                segment['id'],
-                vif_type,
-                vif_details,
-                port_status)
+            context.set_binding(segment['id'], vif_type,
+                                vif_details, port_status)
 
     def get_ports(self, context, filters=None, fields=None):
         """Gets all ports.
@@ -383,8 +382,7 @@ class OpenContrailDriversBase(object):
     def update_router(self, context, router_id, router):
         """Updates the attributes of a router."""
 
-        return self._update_resource('router', context, router_id,
-                                     router)
+        return self._update_resource('router', context, router_id, router)
 
     def delete_router(self, context, router_id):
         """Deletes a router."""
