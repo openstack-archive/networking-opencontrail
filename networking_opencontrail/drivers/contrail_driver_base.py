@@ -168,28 +168,25 @@ class OpenContrailDriversBase(object):
     def create_subnet(self, context, subnet):
         """Creates a new subnet, and assigns it a symbolic name."""
 
-        if subnet['subnet']['gateway_ip'] is None:
-            gateway = '0.0.0.0'
-            if subnet['subnet']['ip_version'] == 6:
-                gateway = '::'
-            subnet['subnet']['gateway_ip'] = gateway
-
         if subnet['subnet']['host_routes'] != ATTR_NOT_SPECIFIED:
             if (len(subnet['subnet']['host_routes']) >
                     cfg.CONF.max_subnet_host_routes):
                 raise neutron_lib_exc.HostRoutesExhausted(
                     subnet_id=subnet['subnet'].get('id', _('new subnet')),
                     quota=cfg.CONF.max_subnet_host_routes)
+        if subnet['subnet']['allocation_pools'] \
+                and subnet['subnet']['allocation_pools'][0]:
+            # todo THIS IS ONLY WORKAROUND
+            # todo it should +1 only if there's a conflict with contrail dns ip
+            start = unicode(subnet['subnet']['allocation_pools'][0]['start'])
+            import ipaddress
+            start_without_dns = str(ipaddress.ip_address(start) + 1)
+            subnet['subnet']['allocation_pools'][0]['start'] = start_without_dns
 
-        subnet_created = self._create_resource('subnet', context, subnet)
-        return self._make_subnet_dict(subnet_created)
-
-    def _make_subnet_dict(self, subnet):
-        return subnet
+        return self._create_resource('subnet', context, subnet)
 
     def _get_subnet(self, context, subnet_id, fields=None):
-        subnet = self._get_resource('subnet', context, subnet_id, fields)
-        return self._make_subnet_dict(subnet)
+        return self._get_resource('subnet', context, subnet_id, fields)
 
     def get_subnet(self, context, subnet_id, fields=None):
         """Gets the attributes of a particular subnet."""
@@ -199,8 +196,7 @@ class OpenContrailDriversBase(object):
     def update_subnet(self, context, subnet_id, subnet):
         """Updates the attributes of a particular subnet."""
 
-        subnet = self._update_resource('subnet', context, subnet_id, subnet)
-        return self._make_subnet_dict(subnet)
+        return self._update_resource('subnet', context, subnet_id, subnet)
 
     def delete_subnet(self, context, subnet_id):
         """Delete a subnet.
@@ -214,9 +210,7 @@ class OpenContrailDriversBase(object):
     def get_subnets(self, context, filters=None, fields=None):
         """Gets the list of subnets."""
 
-        return [self._make_subnet_dict(s)
-                for s in self._list_resource(
-                    'subnet', context, filters, fields)]
+        return self._list_resource('subnet', context, filters, fields)
 
     def get_subnets_count(self, context, filters=None):
         """Gets the count of subnets."""
@@ -256,11 +250,6 @@ class OpenContrailDriversBase(object):
         # These ips are still on the port and haven't been removed
         prev_ips = []
 
-        # the new_ips contain all of the fixed_ips that are to be updated
-        if len(new_ips) > cfg.CONF.max_fixed_ips_per_port:
-            msg = _('Exceeded maximim amount of fixed ips per port')
-            raise neutron_lib_exc.InvalidInput(error_message=msg)
-
         # Remove all of the intersecting elements
         for original_ip in original_ips[:]:
             for new_ip in new_ips[:]:
@@ -278,6 +267,13 @@ class OpenContrailDriversBase(object):
         if (port['port'].get('port_security_enabled') is False and
                 port['port'].get('allowed_address_pairs') == []):
             del port['port']['allowed_address_pairs']
+
+        if port.get('data') and not port['data']['resource']['tenant_id'] \
+                and context['tenant_id']:
+            port['data']['resource']['tenant_id'] = context['tenant_id']
+        elif port.get('port') and not port['port']['tenant_id'] \
+                and context.tenant_id:
+            port['port']['tenant_id'] = context.tenant_id
 
         port = self._create_resource('port', context, port)
 
