@@ -1,7 +1,8 @@
 # Exclude slow tests
 .*\[.*\bslow\b.*\]
+.*\[.*\bsmoke\b.*\]
 
-# Exclude stuff less releated to networking, to reduce gate load
+# Exclude stuff less related to networking, to reduce gate load
 tempest\.api\.compute.*
 tempest\.api\.identity.*
 tempest\.api\.image.*
@@ -14,10 +15,36 @@ tempest\.scenario\.test_shelve_instance.*
 tempest\.scenario\.test_snapshot.*
 tempest\.scenario\.test_stamp.*
 tempest\.scenario\.test_volume.*
+.*reboot.*
+.*instance.*
+.*vms.*
+
+# Exclude tests which exhaust hardware resources
+tempest\.scenario\.test_network_basic_ops\.TestNetworkBasicOps\.test_network_basic_ops
+tempest\.scenario\.test_network_basic_ops\.TestNetworkBasicOps\.test_hotplug_nic
+neutron_tempest_plugin\.scenario\.test_security_groups\.NetworkSecGroupTest\.test_default_sec_grp_scenarios
+neutron_tempest_plugin\.scenario\.test_security_groups\.NetworkSecGroupTest\.test_ip_prefix.*
+neutron_tempest_plugin\.scenario\.test_security_groups\.NetworkSecGroupTest\.test_multiple_ports_secgroup_inheritance
+neutron_tempest_plugin\.scenario\.test_security_groups\.NetworkSecGroupTest\.test_protocol_number_rule
+neutron_tempest_plugin\.scenario\.test_security_groups\.NetworkSecGroupTest\.test_remote_group
+neutron_tempest_plugin\.scenario\.test_security_groups\.NetworkSecGroupTest\.test_two_sec_groups
+neutron_tempest_plugin\.scenario\.test_floatingip.*test_east_west.*
+neutron_tempest_plugin\.scenario\.test_floatingip\.FloatingIPPortDetailsTest\.test_floatingip_port_details
+neutron_tempest_plugin\.scenario\.test_portsecurity\.PortSecurityTest\.test_port_security_removed_added
+.*traffic.*
 
 # Exclude not supported features
-neutron_tempest_plugin\.api.*RBAC.*
-neutron_tempest_plugin\.api.*dns.*
-neutron_tempest_plugin\.api.*logging.*
-neutron_tempest_plugin\.api.*qos.*
-neutron_tempest_plugin\.api\.test_trunk.*
+.*snat.*
+.*RBAC.*
+.*dns.*
+.*logging.*
+.*trunk.*
+.*qos.*
+.*revision.*
+.*timestamp.*
+.*_ha.*
+neutron_tempest_plugin.*TrunkTestJSON.*
+neutron_tempest_plugin\.scenario\.test_floatingip\.FloatingIPQosTest
+neutron_tempest_plugin\.api.test_routers\.DvrRoutersTestToCentralized\.test_convert_centralized_router
+neutron_tempest_plugin\.api.test_routers\.DvrRoutersTest\.test_create_distributed_router
+neutron_tempest_plugin\.api.test_routers\.HaRoutersTest.*
