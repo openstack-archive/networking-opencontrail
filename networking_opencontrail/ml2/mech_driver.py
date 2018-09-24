@@ -113,6 +113,13 @@ class OpenContrailMechDriver(api.MechanismDriver):
     def create_port_postcommit(self, context):
         """Create a port in OpenContrail."""
         port = {'port': dict(context.current)}
+
+        port = {'port': dict(context.current)}
+
+        if port['port']['device_owner'] == "network:floatingip":
+            LOG.debug("Port is floating IP: omit callback to Contrail")
+            return
+
         try:
             self.drv.create_port(context._plugin_context, port)
         except Exception:
@@ -124,6 +131,11 @@ class OpenContrailMechDriver(api.MechanismDriver):
     def update_port_postcommit(self, context):
         """Update a port in OpenContrail."""
         port = {'port': dict(context.current)}
+
+        if port['port']['device_owner'] == "network:floatingip":
+            LOG.debug("Port is floating IP: omit callback to Contrail")
+            return
+            
         try:
             self.drv.update_port(context._plugin_context,
                                  port['port']['id'], port)
