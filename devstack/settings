@@ -2,8 +2,10 @@ if ! [[ "$Q_ML2_PLUGIN_MECHANISM_DRIVERS" =~ "opencontrail" ]]; then
     Q_ML2_PLUGIN_MECHANISM_DRIVERS="$Q_ML2_PLUGIN_MECHANISM_DRIVERS,opencontrail"
 fi
 
-if ! [[ "$Q_SERVICE_PLUGIN_CLASSES" =~ "opencontrail-router" ]]; then
-    Q_SERVICE_PLUGIN_CLASSES="$Q_SERVICE_PLUGIN_CLASSES,opencontrail-router"
+if [[ "$Q_DVR_MODE" != "dvr_snat" ]]; then
+    if ! [[ "$Q_SERVICE_PLUGIN_CLASSES" =~ "opencontrail-router" ]]; then
+        Q_SERVICE_PLUGIN_CLASSES="$Q_SERVICE_PLUGIN_CLASSES,opencontrail-router"
+    fi
 fi
 
 OPENCONTRAIL_DIR=${OPENCONTRAIL_DIR:-$DEST/networking-opencontrail}
