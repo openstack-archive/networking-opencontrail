@@ -752,7 +752,7 @@ class PortTestCases(test_extensions_base.ExtensionTestCase):
         config.max_fixed_ips_per_port = 0
         drv = self._get_drv()
         drv._update_resource = mock.Mock()
-        port = self._get_port(fixed_ips=["127.0.0.1"])
+        port = self._get_port(fixed_ips=[self._get_ip()])
         port_id = port['port']['id']
         drv._get_port = mock.Mock()
         drv._get_port.return_value = port['port']
