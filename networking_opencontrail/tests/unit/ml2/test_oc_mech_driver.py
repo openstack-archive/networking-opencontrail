@@ -310,13 +310,15 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
         subnt = {'subnet': subnet}
         return context, subnt
 
-    def get_port_context(self, ten_id, net_id, port_id, port_name=None):
+    def get_port_context(self, ten_id, net_id, port_id, port_name=None,
+                         device_owner=None):
         if not port_name:
             port_name = 'test_port'
         port = {'id': port_id,
                 'network_id': net_id,
                 'tenant_id': ten_id,
-                'name': port_name}
+                'name': port_name,
+                'device_owner': device_owner}
         context = fake_port_context(ten_id, port, port)
         prt = {'port': port}
         return context, prt
