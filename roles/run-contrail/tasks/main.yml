@@ -1,8 +1,8 @@
 ---
 # Provision instance then install and run Contrail
 
-- include: provision-instance.yml
-- include: install-contrail.yml
+- include_tasks: provision-instance.yml
+- include_tasks: install-contrail.yml
 
 - name: Wait for Contrail API to come up
   uri:
