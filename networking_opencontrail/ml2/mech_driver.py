@@ -44,8 +44,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
 
     def create_network_postcommit(self, context):
         """Create a network in OpenContrail."""
-        network = {}
-        network['network'] = context.current
+        network = {'network': context.current}
         try:
             self.drv.create_network(context._plugin_context, network)
         except Exception:
@@ -67,8 +66,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
 
     def update_network_postcommit(self, context):
         """Update an existing network in OpenContrail."""
-        network = {}
-        network['network'] = context.current
+        network = {'network': context.current}
         try:
             self.drv.update_network(context._plugin_context,
                                     network['network']['id'], network)
@@ -80,8 +78,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
 
     def create_subnet_postcommit(self, context):
         """Create a subnet in OpenContrail."""
-        subnet = {}
-        subnet['subnet'] = context.current
+        subnet = {'subnet': context.current}
         try:
             self.drv.create_subnet(context._plugin_context, subnet)
         except Exception:
@@ -103,8 +100,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
 
     def update_subnet_postcommit(self, context):
         """Update a subnet in OpenContrail."""
-        subnet = {}
-        subnet['subnet'] = context.current
+        subnet = {'subnet': context.current}
         try:
             self.drv.update_subnet(context._plugin_context,
                                    subnet['subnet']['id'], subnet)
@@ -116,9 +112,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
 
     def create_port_postcommit(self, context):
         """Create a port in OpenContrail."""
-        port = {}
-        port['port'] = dict(context.current)
-
+        port = {'port': dict(context.current)}
         try:
             self.drv.create_port(context._plugin_context, port)
         except Exception:
@@ -129,9 +123,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
 
     def update_port_postcommit(self, context):
         """Update a port in OpenContrail."""
-        port = {}
-        port['port'] = dict(context.current)
-
+        port = {'port': dict(context.current)}
         try:
             self.drv.update_port(context._plugin_context,
                                  port['port']['id'], port)
@@ -158,8 +150,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
 
     def create_security_group(self, context, sg):
         """Create a Security Group in OpenContrail."""
-        sec_g = {}
-        sec_g['security_group'] = sg
+        sec_g = {'security_group': sg}
         try:
             self.drv.create_security_group(context, sec_g)
         except Exception:
@@ -175,8 +166,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
 
     def update_security_group(self, context, sg_id, sg):
         """Update a Security Group in OpenContrail."""
-        sec_g = {}
-        sec_g['security_group'] = sg
+        sec_g = {'security_group': sg}
         try:
             self.drv.update_security_group(context, sg_id, sec_g)
         except Exception:
@@ -184,8 +174,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
 
     def create_security_group_rule(self, context, sgr):
         """Create a Security Group Rule in OpenContrail."""
-        sgr_r = {}
-        sgr_r['security_group_rule'] = sgr
+        sgr_r = {'security_group_rule': sgr}
         try:
             self.drv.create_security_group_rule(context, sgr_r)
         except Exception:

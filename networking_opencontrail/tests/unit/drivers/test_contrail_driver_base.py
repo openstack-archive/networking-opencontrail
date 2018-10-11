@@ -748,20 +748,6 @@ class PortTestCases(test_extensions_base.ExtensionTestCase):
                                                 port_id, port)
 
     @mock.patch("oslo_config.cfg.CONF")
-    def test_update_port_fixed_ips_error(self, config):
-        config.max_fixed_ips_per_port = 0
-        drv = self._get_drv()
-        drv._update_resource = mock.Mock()
-        port = self._get_port(fixed_ips=["127.0.0.1"])
-        port_id = port['port']['id']
-        drv._get_port = mock.Mock()
-        drv._get_port.return_value = port['port']
-        context = mock.Mock()
-
-        self.assertRaises(exceptions.InvalidInput, drv.update_port,
-                          context, port_id, port)
-
-    @mock.patch("oslo_config.cfg.CONF")
     def test_update_port_fixed_ips(self, config):
         config.max_fixed_ips_per_port = 10
         drv = self._get_drv()
