@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
+import ipaddress
+from six import u as unicode
 
 from neutron.common import exceptions as neutron_exc
 from neutron.db import quota_db  # noqa
@@ -174,6 +176,14 @@ class OpenContrailDriversBase(object):
                 raise neutron_lib_exc.HostRoutesExhausted(
                     subnet_id=subnet['subnet'].get('id', _('new subnet')),
                     quota=cfg.CONF.max_subnet_host_routes)
+        if ('allocation_pools' in subnet['subnet']
+                and subnet['subnet']['allocation_pools'][0]):
+            # THIS IS ONLY WORKAROUND
+            # it should +1 only if there's a conflict with contrail dns ip
+            # TODO(maciej.jagiello) Change workaround to a permanent solution
+            start = unicode(subnet['subnet']['allocation_pools'][0]['start'])
+            start_wout_dns = str(ipaddress.ip_address(start) + 1)
+            subnet['subnet']['allocation_pools'][0]['start'] = start_wout_dns
 
         return self._create_resource('subnet', context, subnet)
 
