@@ -11,6 +11,7 @@
   pre_tasks:
     - set_fact:
         devstack_openrc: "{{ devstack_base_dir }}/devstack/openrc"
+        tempest_dir: "{{ devstack_base_dir }}/tempest"
         tempest_conf: "{{ devstack_base_dir }}/tempest/etc/tempest.conf"
 
     - name: Create Public external network
@@ -37,6 +38,16 @@
                                         --network ext-public \
                                         --ip-version 4 --dhcp ep-subnet
       args:
+        executable: /bin/bash
+
+    - name: Verify tempest config and update extensions list
+      become: yes
+      shell: |
+        set -e
+        set -x
+        tempest verify-config -r -u -o {{ tempest_conf }}
+      args:
+        chdir: "{{ tempest_dir }}"
         executable: /bin/bash
 
     - name: Set ext-public network as tempest public_network_id
