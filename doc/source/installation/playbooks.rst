@@ -164,6 +164,7 @@ Created VM could be accessed by VNC (through horizon):
 1. Go to horizon's list of VMs http://10.100.0.3/dashboard/project/instances/
 
 2. Enter into the VM's console.
+
   - If the console does not response, click the link "Click here to show only console".
   - If you see black console, press enter to attach.
 
