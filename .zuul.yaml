@@ -174,6 +174,7 @@
     description: Tempest network tests
     run: playbooks/zuul/noc-tempest.yaml
     vars:
+      tempest_concurrency: 1
       devstack_local_conf:
         test-config:
           $TEMPEST_CONFIG:
@@ -188,6 +189,7 @@
     parent: noc-tempest
     description: Tempest neutron plugin tests
     vars:
+      tempest_concurrency: 1
       devstack_local_conf:
         test-config:
           $TEMPEST_CONFIG:
