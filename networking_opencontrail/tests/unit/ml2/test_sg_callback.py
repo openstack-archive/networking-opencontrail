@@ -85,6 +85,19 @@ class SecurityGroupTestCases(testlib_api.SqlTestCase):
         params['security_group_rule'] = {'id': '627d-21345154a-bc787'}
         params['security_group_rule_id'] = params['security_group_rule']['id']
 
+    @classmethod
+    def _get_secgroup_payload(cls, params):
+        payload = mock.Mock()
+        payload.context = cls._get_mock_network_operation_context()
+        payload.latest_state = {'id': '982540-abc3152-54989dd',
+                                'name': 'secgroup-1'}
+        payload.resource_id = payload.latest_state['id']
+        params['payload'] = payload
+
+        # Callbacks which use payload don't accept more arguments
+        if 'context' in params:
+            del params['context']
+
     def test_create_security_group(self):
         kwargs = {}
         self._get_callback_params(kwargs)
@@ -97,11 +110,11 @@ class SecurityGroupTestCases(testlib_api.SqlTestCase):
     def test_delete_security_group(self):
         kwargs = {}
         self._get_callback_params(kwargs)
-        self._get_secgroup_params(kwargs)
+        self._get_secgroup_payload(kwargs)
         self.sg_handler.delete_security_group(**kwargs)
         self.sg_handler.client.delete_security_group.assert_called_with(
-            kwargs['context'],
-            kwargs['security_group'])
+            kwargs['payload'].context,
+            kwargs['payload'].latest_state)
 
     def test_update_security_group(self):
         kwargs = {}
@@ -142,7 +155,7 @@ class SecurityGroupTestCases(testlib_api.SqlTestCase):
         """
         kwargs = {}
         self._get_callback_params(kwargs)
-        self._get_secgroup_params(kwargs)
+        self._get_secgroup_payload(kwargs)
         self.sg_handler.client.delete_security_group.side_effect = (
             DELETE_SG_FAILS_EXCEPTION)
         self.sg_handler.delete_security_group(**kwargs)
