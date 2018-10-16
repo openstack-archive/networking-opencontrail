@@ -2,18 +2,12 @@
 networking-opencontrail
 ===============================
 
-Networking drivers and service plugins to integrate OpenContrail with Neutron
+Networking drivers and service plugins to integrate TungstenFabric with Neutron
 
-Please fill here a long description which must be at least 3 lines wrapped on
-80 cols, so that distribution package maintainers can use it in their packages.
-Note that this is a hard requirement.
+The plugin integrates Tunsten Fabric backend with OpenStack Neutron.
+It communicates with Neutron over ML2 Mechanism Driver API.
 
 * Free software: Apache license
 * Documentation: http://docs.openstack.org/developer/networking-opencontrail
 * Source: http://git.openstack.org/cgit/openstack/networking-opencontrail
 * Bugs: https://launchpad.net/networking-opencontrail
-
-Features
---------
-
-* TODO

@@ -18,6 +18,7 @@ Contents
    installation/playbooks
    devstack
    usage
+   troubleshooting
    contributing
 
 Indices and tables

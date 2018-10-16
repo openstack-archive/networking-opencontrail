@@ -2,29 +2,43 @@
  Enabling in Devstack
 ======================
 
-1. Download DevStack::
+#. Download Devstack::
 
      git clone https://git.openstack.org/openstack-dev/devstack
      cd devstack
 
-2. Copy the sample local.conf, if you already do not have local.conf::
+#. Copy the sample local.conf, if you already do not have local.conf::
 
      cp samples/local.conf .
 
-3. Add this repo as an external repository::
+#. In the local.conf add several lines as follows::
 
-     > cat local.conf
-     [[local|localrc]]
-     enable_plugin networking-opencontrail http://git.openstack.org/openstack/networking-opencontrail
+    [[local|localrc]]
+    # (skipping already present lines...)
 
-4. Specify the Contrail API Server IP address and the port number::
+    # Enable ML2 plugin
+    enable_plugin networking-opencontrail https://git.openstack.org/openstack/networking-opencontrail
+    Q_PLUGIN=ml2
+    ML2_L3_PLUGIN=opencontrail-router
+    NEUTRON_CREATE_INITIAL_NETWORKS=False
+    Q_USE_SECGROUP=True
 
-     > cat local.conf
-     [[local|localrc]]
-     OPENCONTRAIL_APISERVER_IP=<ip address>
-     OPENCONTRAIL_APISERVER_PORT=<port-number>
+    # Specify the Contrail API Server IP address and the port number
+    OPENCONTRAIL_APISERVER_IP=192.168.0.16
+    OPENCONTRAIL_APISERVER_PORT=8082
 
-5. Optionally, if you need to use secure SSL connection, specify additional
+    # Configure ML2 plugin
+    PHYSICAL_NETWORK=public
+    TENANT_VLAN_RANGE=1:4094
+    [[post-config|$NEUTRON_CORE_PLUGIN_CONF]]
+    [ml2]
+    type_drivers = local,vlan
+    tenant_network_types = local,vlan
+    mechanism_drivers = opencontrail
+    extension_drivers = port_security
+
+
+#. Optionally, if you need to use secure SSL connection, specify additional
    configuration variables as below::
 
      > cat local.conf
@@ -35,4 +49,4 @@
      OPENCONTRAIL_KEY_FILE=<Key file>
      OPENCONTRAIL_CA_FILE=<ca file>
 
-6. run ``stack.sh``
+#. run ``stack.sh``
