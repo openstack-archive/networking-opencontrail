@@ -238,7 +238,6 @@ class OpenContrailDriversBase(object):
     def _update_ips_for_port(self, context, network_id, port_id, original_ips,
                              new_ips):
         """Add or remove IPs from the port."""
-
         # These ips are still on the port and haven't been removed
         prev_ips = []
 
@@ -286,10 +285,14 @@ class OpenContrailDriversBase(object):
         """
         original = self._get_port(context, port_id)
         if 'fixed_ips' in port['port']:
-            added_ips, prev_ips = self._update_ips_for_port(
+            _, prev_ips = self._update_ips_for_port(
                 context, original['network_id'], port_id,
                 original['fixed_ips'], port['port']['fixed_ips'])
-            port['port']['fixed_ips'] = prev_ips + added_ips
+
+            # We need to update original list object, because it's still
+            # in use by Neutron
+            for fixed_ip in reversed(prev_ips):
+                port['port']['fixed_ips'].insert(0, ip)
 
         if 'binding:host_id' in port['port']:
             original['binding:host_id'] = port['port']['binding:host_id']
