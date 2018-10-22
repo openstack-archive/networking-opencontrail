@@ -238,7 +238,6 @@ class OpenContrailDriversBase(object):
     def _update_ips_for_port(self, context, network_id, port_id, original_ips,
                              new_ips):
         """Add or remove IPs from the port."""
-
         # These ips are still on the port and haven't been removed
         prev_ips = []
 
@@ -248,8 +247,6 @@ class OpenContrailDriversBase(object):
                 if ('ip_address' in new_ip
                         and original_ip['ip_address'] == new_ip['ip_address']):
                     original_ips.remove(original_ip)
-                    new_ips.remove(new_ip)
-                    prev_ips.append(original_ip)
 
         return new_ips, prev_ips
 
@@ -286,10 +283,9 @@ class OpenContrailDriversBase(object):
         """
         original = self._get_port(context, port_id)
         if 'fixed_ips' in port['port']:
-            added_ips, prev_ips = self._update_ips_for_port(
+            self._update_ips_for_port(
                 context, original['network_id'], port_id,
                 original['fixed_ips'], port['port']['fixed_ips'])
-            port['port']['fixed_ips'] = prev_ips + added_ips
 
         if 'binding:host_id' in port['port']:
             original['binding:host_id'] = port['port']['binding:host_id']
