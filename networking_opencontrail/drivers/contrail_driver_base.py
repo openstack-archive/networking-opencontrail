@@ -238,9 +238,11 @@ class OpenContrailDriversBase(object):
     def _update_ips_for_port(self, context, network_id, port_id, original_ips,
                              new_ips):
         """Add or remove IPs from the port."""
-
         # These ips are still on the port and haven't been removed
         prev_ips = []
+
+        # We need to copy list object, because it's still in use by Neutron
+        new_ips = new_ips[:]
 
         # Remove all of the intersecting elements
         for original_ip in original_ips[:]:
