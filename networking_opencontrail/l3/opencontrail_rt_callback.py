@@ -62,6 +62,14 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
         """
         try:
             router = self.driver.create_router(context, router)
+
+            if ('external_gateway_info' in router
+                    and router['external_gateway_info']):
+                snat_ip = self._get_snat_ip(context, router['id'], router['external_gateway_info']['network_id'])
+                self._create_snat_interface(
+                    context, router['external_gateway_info'], router['id'],
+                    snat_ip)
+
             session = db_api.get_writer_session()
             with session.begin(subtransactions=True):
                 super(OpenContrailRouterHandler,
@@ -71,12 +79,47 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
                 LOG.error("Failed to create a router %(id)s: %(err)s",
                           {"id": router["id"], "err": e})
                 try:
+                    # TODO(mjag) do not delete when create in contrail failed,
+                    # because router hasn't been created
                     self.driver.delete_router(context, router['id'])
                 except Exception:
                     LOG.exception("Failed to delete router %s",
                                   router['id'])
 
         return router
+
+    def _get_from_tungsten_api(self, url_path):
+        # TODO: (kamman) move to drv_opencontrail, refactor & retry
+        import requests
+        from oslo_config import cfg
+
+        url = "%s://%s:%s%s" % ('http', # self._apiserverconnect,
+                                cfg.CONF.APISERVER.api_server_ip,
+                                cfg.CONF.APISERVER.api_server_port,
+                                url_path)
+
+        response = requests.get(url)
+
+        try:
+            return response.json()
+        except JSONDecodeError:
+            raise Exception("ERROR on decode: %s" % response.content)
+
+    def _get_snat_ip(self, context, router_id, network_id):
+        import re
+        url_path = '/instance-ips?detail=True'
+        for _ in range(3):
+            instance_ips = self._get_from_tungsten_api(url_path)
+            iip = [iip['instance-ip'] for iip in instance_ips['instance-ips'] if re.match('^.*snat_{router_id}_[a-f0-9-]+-right$'.format(router_id=router_id), iip['instance-ip']['fq_name'][0])]
+            if len(iip) == 1:
+                break
+            import time
+            time.sleep(1)
+        if len(iip) != 1:
+            raise Exception('expected 1 snat interface' + str(iip))
+        snat_ip = iip[0]['instance_ip_address']
+
+        return snat_ip
 
     @log_helpers.log_method_call
     def delete_router(self, context, router_id):
@@ -91,6 +134,10 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
 
             try:
                 self.driver.delete_router(context, router_id)
+                snat_interface = self._snat_interface_in_neutron(
+                    context, router_id)
+                if snat_interface:
+                    self._delete_snat_interface(context, snat_interface)
             except Exception as e:
                 LOG.error("Failed to delete router %(id)s: %(err)s",
                           {"id": router_id, "err": e})
@@ -105,19 +152,71 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
             LOG.warning("OpenContrail doesn't allow for changing router "
                         "%(id)s name to %(name)s",
                         {"id": router_id, "name": router['router']['name']})
+        prev_router = None
+        router_dict = None
+        try:
+            prev_router = self.driver.get_router(context, router_id)
+            self.driver.update_router(context, router_id, router)
+            self._update_snat_interface(context, router, router_id)  # todo handle fail
 
-        session = db_api.get_writer_session()
-        with session.begin(subtransactions=True):
-            router_dict = super(OpenContrailRouterHandler, self).update_router(
-                context, router_id, router)
+            session = db_api.get_writer_session()
+            with session.begin(subtransactions=True):
+                router_dict = super(OpenContrailRouterHandler, self).update_router(
+                    context, router_id, router)
 
-            try:
-                self.driver.update_router(context, router_id, router)
-            except Exception as e:
+        except Exception as e:
+            with excutils.save_and_reraise_exception():
                 LOG.error("Failed to update router %(id)s: %(err)s",
                           {"id": router_id, "err": e})
+                try:
+                    # TODO(mjag) do not update when update in contrail failed,
+                    # because router hasn't changed
+                    if prev_router:
+                        self.driver.update_router(context, router_id, {'router': prev_router})
+                except Exception:
+                    LOG.exception("Failed to update router %s", router_id)
 
         return router_dict
+
+    def _update_snat_interface(self, context, router, router_id):
+        if ('external_gateway_info' in router['router']
+                and router['router']['external_gateway_info']):
+            snat_ip = self._get_snat_ip(
+                context, router_id, router['router']['external_gateway_info']['network_id'])
+            if not self._snat_interface_in_neutron(context, router_id):
+                self._create_snat_interface(
+                    context, router['router']['external_gateway_info'], router_id, snat_ip)
+        else:
+            snat_interface = self._snat_interface_in_neutron(context,
+                                                             router_id)
+            if snat_interface:
+                self._delete_snat_interface(context, snat_interface)
+
+    def _create_snat_interface(self, context, external_gateway_info, router_id, snat_ip):
+        port_data = {'tenant_id': context.tenant_id,
+                     'network_id': external_gateway_info['network_id'],
+                     'fixed_ips': [{'ip_address': snat_ip}],
+                     'device_id': router_id,
+                     'device_owner': 'tf-compatibility:snat',
+                     'admin_state_up': True,
+                     'name': 'contrail-snat-interface' # todo ensure it will be the only one
+                     }
+        super(OpenContrailRouterHandler, self)._core_plugin.create_port(
+            context.elevated(), {'port': port_data})
+
+    def _snat_interface_in_neutron(self, context, router_id):
+        # from neutron_lib.plugins import directory
+        # directory.get_plugin()
+        ports = super(OpenContrailRouterHandler, self)._core_plugin.get_ports(
+            context, filters={'device_id': [router_id],
+                              'name': ['contrail-snat-interface']})
+        if len(ports) == 1:
+            return ports[0]
+        else:
+            return None
+
+    def _delete_snat_interface(self, context, snat_interface):
+        super(OpenContrailRouterHandler, self)._core_plugin.delete_port(context, snat_interface['id'])
 
     @log_helpers.log_method_call
     def add_router_interface(self, context, router_id, interface_info):
