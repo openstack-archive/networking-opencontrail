@@ -18,9 +18,13 @@ from oslo_log import log as logging
 import networking_opencontrail.drivers.drv_opencontrail as drv
 from neutron_lib.plugins.ml2 import api
 
+from networking_opencontrail.l3.opencontrail_rt_callback import (
+    TF_SNAT_DEVICE_OWNER)
 from networking_opencontrail.ml2 import opencontrail_sg_callback
 
 LOG = logging.getLogger(__name__)
+OMIT_DEVICES_TYPES = ["network:floatingip",
+                      TF_SNAT_DEVICE_OWNER]
 
 
 class OpenContrailMechDriver(api.MechanismDriver):
@@ -118,6 +122,10 @@ class OpenContrailMechDriver(api.MechanismDriver):
             LOG.debug("Port is floating IP: omit callback to Contrail")
             return
 
+        if port['port']['device_owner'] == "tf-compatibility:snat":
+            LOG.debug("Port is a SNAT interface: omit callback to Contrail")
+            return
+
         try:
             self.drv.create_port(context._plugin_context, port)
         except Exception:
@@ -130,8 +138,9 @@ class OpenContrailMechDriver(api.MechanismDriver):
         """Update a port in OpenContrail."""
         port = {'port': dict(context.current)}
 
-        if port['port']['device_owner'] == "network:floatingip":
-            LOG.debug("Port is floating IP: omit callback to Contrail")
+        if port['port']['device_owner'] in OMIT_DEVICES_TYPES:
+            LOG.debug("Port device owner: {} - omit callback to "
+                      "Contrail".format(port['port']['device_owner']))
             return
 
         try:
@@ -147,8 +156,9 @@ class OpenContrailMechDriver(api.MechanismDriver):
         """Delete a port from OpenContrail."""
         port = context.current
 
-        if port['device_owner'] == "network:floatingip":
-            LOG.debug("Port is floating IP: omit callback to Contrail")
+        if port['device_owner'] in OMIT_DEVICES_TYPES:
+            LOG.debug("Port device owner: {} - omit callback to "
+                      "Contrail".format(port['device_owner']))
             return
 
         try:
