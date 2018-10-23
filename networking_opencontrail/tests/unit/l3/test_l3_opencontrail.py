@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-
-
 import logging
 import mock
 import six
@@ -22,6 +20,32 @@ from neutron.tests.unit.extensions import base as test_extensions_base
 from neutron_lib.plugins import constants
 
 from networking_opencontrail.l3 import opencontrail_rt_callback
+
+
+def get_mock_network_operation_context():
+    current = {'status': 'ACTIVE',
+               'subnets': [],
+               'name': 'net1',
+               'provider:physical_network': None,
+               'admin_state_up': True,
+               'tenant_id': 'test-tenant',
+               'provider:network_type': 'local',
+               'router:external': False,
+               'shared': False,
+               'id': 'd897e21a-dfd6-4331-a5dd-7524fa421c3e',
+               'provider:segmentation_id': None}
+    context = mock.Mock(current=current)
+    return context
+
+
+def get_mock_cfg():
+    cfg = mock.Mock()
+    cfg.CONF.APISERVER.api_server_ip = '127.0.0.1'
+    cfg.CONF.APISERVER.api_server_port = 8082
+    cfg.CONF.APISERVER.use_ssl = False
+    cfg.CONF.APISERVER.insecure = True
+    cfg.CONF.APISERVER.cafile = None
+    return cfg
 
 
 class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
@@ -38,22 +62,6 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
     def tearDown(self):
         super(L3OpenContrailTestCases, self).tearDown()
         logging.disable(logging.NOTSET)
-
-    @staticmethod
-    def _get_mock_network_operation_context():
-        current = {'status': 'ACTIVE',
-                   'subnets': [],
-                   'name': 'net1',
-                   'provider:physical_network': None,
-                   'admin_state_up': True,
-                   'tenant_id': 'test-tenant',
-                   'provider:network_type': 'local',
-                   'router:external': False,
-                   'shared': False,
-                   'id': 'd897e21a-dfd6-4331-a5dd-7524fa421c3e',
-                   'provider:segmentation_id': None}
-        context = mock.Mock(current=current)
-        return context
 
     @staticmethod
     def _get_router_test():
@@ -83,30 +91,36 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
 
         return floatingip
 
+    @mock.patch("networking_opencontrail.l3.snat_synchronizer."
+                "SnatSynchronizer")
     @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
                 "OpenContrailDrivers")
-    def test_get_plugin_type(self, _):
+    def test_get_plugin_type(self, _, snat_sync):
         hook = opencontrail_rt_callback.OpenContrailRouterHandler()
 
         type = hook.get_plugin_type()
 
         self.assertEqual(constants.L3, type, "Wrong plugin type")
 
+    @mock.patch("networking_opencontrail.l3.snat_synchronizer."
+                "SnatSynchronizer")
     @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
                 "OpenContrailDrivers")
-    def test_get_plugin_description(self, _):
+    def test_get_plugin_description(self, _, snat_sync):
         hook = opencontrail_rt_callback.OpenContrailRouterHandler()
 
         description = hook.get_plugin_description()
 
         self.assertIsInstance(description, six.string_types)
 
+    @mock.patch("networking_opencontrail.l3.snat_synchronizer."
+                "SnatSynchronizer")
     @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
                 "OpenContrailDrivers")
     @mock.patch("neutron.db.l3_gwmode_db.L3_NAT_db_mixin.create_router")
-    def test_create_router(self, l3_nat, driver):
+    def test_create_router(self, l3_nat, driver, snat_sync):
         router_id, router = self._get_router_test()
-        context = self._get_mock_network_operation_context()
+        context = get_mock_network_operation_context()
         hook = opencontrail_rt_callback.OpenContrailRouterHandler()
         new_router = router
         new_router['id'] = router_id
@@ -115,24 +129,28 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
 
         hook.driver.create_router.assert_called_with(context, router)
 
+    @mock.patch("networking_opencontrail.l3.snat_synchronizer."
+                "SnatSynchronizer")
     @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
                 "OpenContrailDrivers")
     @mock.patch("neutron.db.l3_gwmode_db.L3_NAT_db_mixin.delete_router")
-    def test_delete_router(self, l3_nat, driver):
+    def test_delete_router(self, l3_nat, driver, snat_sync):
         router_id, _ = self._get_router_test()
-        context = self._get_mock_network_operation_context()
+        context = get_mock_network_operation_context()
         hook = opencontrail_rt_callback.OpenContrailRouterHandler()
 
         hook.delete_router(context, router_id)
 
         hook.driver.delete_router.assert_called_with(context, router_id)
 
+    @mock.patch("networking_opencontrail.l3.snat_synchronizer."
+                "SnatSynchronizer")
     @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
                 "OpenContrailDrivers")
     @mock.patch("neutron.db.extraroute_db.ExtraRoute_db_mixin.update_router")
-    def test_update_router(self, extra_route, driver):
+    def test_update_router(self, extra_route, driver, snat_sync):
         router_id, router = self._get_router_test()
-        context = self._get_mock_network_operation_context()
+        context = get_mock_network_operation_context()
         hook = opencontrail_rt_callback.OpenContrailRouterHandler()
 
         hook.update_router(context, router_id, router)
@@ -140,14 +158,16 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
         hook.driver.update_router.assert_called_with(context, router_id,
                                                      router)
 
+    @mock.patch("networking_opencontrail.l3.snat_synchronizer."
+                "SnatSynchronizer")
     @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
                 "OpenContrailDrivers")
     @mock.patch("neutron.db.l3_gwmode_db.L3_NAT_db_mixin."
                 "add_router_interface")
-    def test_add_router_interface(self, l3_nat, driver):
+    def test_add_router_interface(self, l3_nat, driver, snat_sync):
         router_id, _ = self._get_router_test()
         interface_info = self._get_interface_info()
-        context = self._get_mock_network_operation_context()
+        context = get_mock_network_operation_context()
         l3_nat.return_value = interface_info
         hook = opencontrail_rt_callback.OpenContrailRouterHandler()
 
@@ -157,14 +177,16 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
                                                             router_id,
                                                             mock.ANY)
 
+    @mock.patch("networking_opencontrail.l3.snat_synchronizer."
+                "SnatSynchronizer")
     @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
                 "OpenContrailDrivers")
     @mock.patch("neutron.db.l3_gwmode_db.L3_NAT_db_mixin."
                 "remove_router_interface")
-    def test_remove_router_interface(self, l3_nat, driver):
+    def test_remove_router_interface(self, l3_nat, driver, snat_sync):
         router_id, _ = self._get_router_test()
         interface_info = self._get_interface_info()
-        context = self._get_mock_network_operation_context()
+        context = get_mock_network_operation_context()
         hook = opencontrail_rt_callback.OpenContrailRouterHandler()
 
         hook.remove_router_interface(context, router_id, interface_info)
@@ -173,12 +195,14 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
                                                                router_id,
                                                                interface_info)
 
+    @mock.patch("networking_opencontrail.l3.snat_synchronizer."
+                "SnatSynchronizer")
     @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
                 "OpenContrailDrivers")
     @mock.patch("neutron.db.l3_dvr_db.L3_NAT_with_dvr_db_mixin."
                 "create_floatingip")
-    def test_create_floatingip(self, l3_nat, driver):
-        context = self._get_mock_network_operation_context()
+    def test_create_floatingip(self, l3_nat, driver, snat_sync):
+        context = get_mock_network_operation_context()
         floatingip = self._get_floating_ip()
         l3_nat.return_value = floatingip
         hook = opencontrail_rt_callback.OpenContrailRouterHandler()
@@ -189,6 +213,8 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
         hook.driver.create_floatingip.assert_called_with(context,
                                                          mock.ANY)
 
+    @mock.patch("networking_opencontrail.l3.snat_synchronizer."
+                "SnatSynchronizer")
     @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
                 "OpenContrailDrivers")
     @mock.patch("neutron.db.l3_dvr_db.L3_NAT_with_dvr_db_mixin."
@@ -197,8 +223,8 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
                 "update_floatingip")
     @mock.patch("neutron.db.l3_dvr_db.L3_NAT_with_dvr_db_mixin."
                 "update_floatingip_status")
-    def test_update_floatingip(self, l3_nat, l3_get, driver, driver2):
-        context = self._get_mock_network_operation_context()
+    def test_update_floatingip(self, l3_nat, l3_get, _, driver, snat_sync):
+        context = get_mock_network_operation_context()
         floatingip = self._get_floating_ip()
         l3_nat.return_value = floatingip
         l3_get.return_value = floatingip['floatingip']
@@ -212,14 +238,16 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
                                                          fip_id,
                                                          mock.ANY)
 
+    @mock.patch("networking_opencontrail.l3.snat_synchronizer."
+                "SnatSynchronizer")
     @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
                 "OpenContrailDrivers")
     @mock.patch("neutron.db.l3_dvr_db.L3_NAT_with_dvr_db_mixin."
                 "get_floatingip")
     @mock.patch("neutron.db.l3_dvr_db.L3_NAT_with_dvr_db_mixin."
                 "delete_floatingip")
-    def test_delete_floatingip(self, l3_nat, l3_get, driver):
-        context = self._get_mock_network_operation_context()
+    def test_delete_floatingip(self, l3_nat, l3_get, driver, snat_sync):
+        context = get_mock_network_operation_context()
         floatingip = self._get_floating_ip()
         l3_nat.return_value = floatingip
         l3_get.return_value = floatingip['floatingip']
@@ -231,3 +259,55 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
         l3_nat.assert_called_with(context, fip_id)
         hook.driver.delete_floatingip.assert_called_with(context,
                                                          fip_id)
+
+
+class L3OpenContrailSNATTestCases(test_extensions_base.ExtensionTestCase):
+    def setUp(self):
+        super(L3OpenContrailSNATTestCases, self).setUp()
+        logging.disable(logging.CRITICAL)
+
+    def tearDown(self):
+        super(L3OpenContrailSNATTestCases, self).tearDown()
+        logging.disable(logging.NOTSET)
+
+    @staticmethod
+    def _get_router_test():
+        router_id = "234237d4-1e7f-11e5-9bd7-080027328c3a"
+        router = {'router': {'name': 'router1', 'admin_state_up': True,
+                             'tenant_id': router_id,
+                             'project_id': router_id,
+                             'external_gateway_info': None}}
+        return router_id, router
+
+    @staticmethod
+    def _get_interface():
+        interface = {'id': 'ad8f663c-2e07-4514-bbaf-59b48c3dda7d',
+                     'fixed_ips': [{'ip_address': '10.10.10.10'}]
+                     }
+
+        return interface
+
+    @mock.patch("networking_opencontrail.l3.snat_synchronizer."
+                "TungstenFabricHelper")
+    @mock.patch("networking_opencontrail.drivers.drv_opencontrail."
+                "OpenContrailDrivers")
+    @mock.patch("neutron.db.l3_gwmode_db.L3_NAT_db_mixin.delete_router")
+    @mock.patch("neutron.db.l3_db.directory.get_plugin")
+    def test_delete_router(self, get_plugin, l3_nat, driver, tf_helper):
+        # TODO: I propose to do it in another way: SnatSynchronizer
+        #  is a class with one public endpoint, so maybe better
+        #  we should only test if sync_snat_interface is properly
+        #  called (in old router tests) and test SnatSynchronizer separately.
+        router_id, _ = self._get_router_test()
+        interface = self._get_interface()
+        context = get_mock_network_operation_context()
+        tf_helper._get_snat_ips.return_value = []
+        core_plugin = mock.Mock()
+        core_plugin.get_ports.return_value = [interface]
+        get_plugin.return_value = core_plugin
+        hook = opencontrail_rt_callback.OpenContrailRouterHandler()
+
+        hook.delete_router(context, router_id)
+
+        core_plugin.delete_port.assert_called_with(context, interface['id'])
+        core_plugin.create_port.assert_not_called()
