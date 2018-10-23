@@ -18,6 +18,8 @@ from oslo_log import log as logging
 import networking_opencontrail.drivers.drv_opencontrail as drv
 from neutron_lib.plugins.ml2 import api
 
+from networking_opencontrail.l3.opencontrail_rt_callback import (
+    TF_SNAT_DEVICE_OWNER)
 from networking_opencontrail.ml2 import opencontrail_sg_callback
 from networking_opencontrail.ml2 import subnet_dns_integrator
 
@@ -123,6 +125,10 @@ class OpenContrailMechDriver(api.MechanismDriver):
         port = {'port': dict(context.current)}
 
         if self._is_callback_to_omit(port['port']['device_owner']):
+            return
+
+        if port['port']['device_owner'] == "tf-compatibility:snat":
+            LOG.debug("Port is a SNAT interface: omit callback to Contrail")
             return
 
         try:
