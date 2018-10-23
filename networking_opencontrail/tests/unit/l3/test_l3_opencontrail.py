@@ -111,7 +111,8 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
         new_router = router
         new_router['id'] = router_id
 
-        hook.create_router(context, router)
+        with mock.patch.object(hook, '_sync_snat_interfaces'):
+            hook.create_router(context, router)
 
         hook.driver.create_router.assert_called_with(context, router)
 
@@ -135,7 +136,8 @@ class L3OpenContrailTestCases(test_extensions_base.ExtensionTestCase):
         context = self._get_mock_network_operation_context()
         hook = opencontrail_rt_callback.OpenContrailRouterHandler()
 
-        hook.update_router(context, router_id, router)
+        with mock.patch.object(hook, '_sync_snat_interfaces'):
+            hook.update_router(context, router_id, router)
 
         hook.driver.update_router.assert_called_with(context, router_id,
                                                      router)
