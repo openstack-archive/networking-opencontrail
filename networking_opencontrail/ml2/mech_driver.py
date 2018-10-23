@@ -18,6 +18,8 @@ from oslo_log import log as logging
 import networking_opencontrail.drivers.drv_opencontrail as drv
 from neutron_lib.plugins.ml2 import api
 
+from networking_opencontrail.l3.opencontrail_rt_callback import (
+    TF_SNAT_DEVICE_OWNER)
 from networking_opencontrail.ml2 import opencontrail_sg_callback
 
 LOG = logging.getLogger(__name__)
@@ -114,8 +116,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
         """Create a port in OpenContrail."""
         port = {'port': dict(context.current)}
 
-        if port['port']['device_owner'] == "network:floatingip":
-            LOG.debug("Port is floating IP: omit callback to Contrail")
+        if self._is_callback_to_omit(port['port']['device_owner']):
             return
 
         try:
@@ -130,8 +131,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
         """Update a port in OpenContrail."""
         port = {'port': dict(context.current)}
 
-        if port['port']['device_owner'] == "network:floatingip":
-            LOG.debug("Port is floating IP: omit callback to Contrail")
+        if self._is_callback_to_omit(port['port']['device_owner']):
             return
 
         try:
@@ -147,8 +147,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
         """Delete a port from OpenContrail."""
         port = context.current
 
-        if port['device_owner'] == "network:floatingip":
-            LOG.debug("Port is floating IP: omit callback to Contrail")
+        if self._is_callback_to_omit(port['device_owner']):
             return
 
         try:
@@ -205,3 +204,14 @@ class OpenContrailMechDriver(api.MechanismDriver):
             self.drv.delete_security_group_rule(context, sgr_id)
         except Exception:
             LOG.exception('Failed to delete Security Group rule %s' % sgr_id)
+
+    def _is_callback_to_omit(self, device_owner):
+        # Some device type have ports in Neutron, which are not necessary
+        # in TungstenFabric and operation on it should be not propagated to TF
+        omit_device_types = ["network:floatingip", TF_SNAT_DEVICE_OWNER]
+
+        if device_owner in omit_device_types:
+            LOG.debug("Port device is %s: omit callback to TungstenFabric" %
+                      device_owner)
+            return True
+        return False
