@@ -125,6 +125,10 @@ class OpenContrailMechDriver(api.MechanismDriver):
         if self._is_callback_to_omit(port['port']['device_owner']):
             return
 
+        if port['port']['device_owner'] == "tf-compatibility:snat":
+            LOG.debug("Port is a SNAT interface: omit callback to Contrail")
+            return
+
         try:
             self.drv.create_port(context._plugin_context, port)
         except Exception:
