@@ -114,8 +114,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
         """Create a port in OpenContrail."""
         port = {'port': dict(context.current)}
 
-        if port['port']['device_owner'] == "network:floatingip":
-            LOG.debug("Port is floating IP: omit callback to Contrail")
+        if self._is_callback_to_omit(port['port']['device_owner']):
             return
 
         try:
@@ -130,8 +129,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
         """Update a port in OpenContrail."""
         port = {'port': dict(context.current)}
 
-        if port['port']['device_owner'] == "network:floatingip":
-            LOG.debug("Port is floating IP: omit callback to Contrail")
+        if self._is_callback_to_omit(port['port']['device_owner']):
             return
 
         try:
@@ -147,8 +145,12 @@ class OpenContrailMechDriver(api.MechanismDriver):
         """Delete a port from OpenContrail."""
         port = context.current
 
-        if port['device_owner'] == "network:floatingip":
-            LOG.debug("Port is floating IP: omit callback to Contrail")
+        if self._is_callback_to_omit(port['device_owner']):
+            return
+
+        # Interface port in TF will be delete by remove_router_interface
+        # callback after deleting it in Neutron
+        if port['device_owner'] == "network:router_interface":
             return
 
         try:
@@ -205,3 +207,14 @@ class OpenContrailMechDriver(api.MechanismDriver):
             self.drv.delete_security_group_rule(context, sgr_id)
         except Exception:
             LOG.exception('Failed to delete Security Group rule %s' % sgr_id)
+
+    def _is_callback_to_omit(self, device_owner):
+        # Some device type have ports in Neutron, which are not necessary
+        # in TungstenFabric and operation on it should be not propagated to TF
+        omit_device_types = ["network:floatingip", "tf-compatibility:snat"]
+
+        if device_owner in omit_device_types:
+            LOG.debug("Port device is %s: omit callback to TungstenFabric"
+                % device_owner)
+            return True
+        return False
