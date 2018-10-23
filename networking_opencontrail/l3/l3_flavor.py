@@ -26,6 +26,7 @@ from oslo_log import helpers as log_helpers
 from oslo_log import log as logging
 
 import networking_opencontrail.drivers.drv_opencontrail as driver
+import networking_opencontrail.l3.snat_synchronizer as snat_sync
 
 LOG = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ class TFL3ServiceProvider(base.L3ServiceProvider):
         super(TFL3ServiceProvider, self).__init__(l3_plugin)
         self.driver = driver.OpenContrailDrivers()
         self.provider = __name__ + "." + self.__class__.__name__
+        self.snat_sync = snat_sync.SnatSynchronizer()
 
     @property
     def _flavor_plugin(self):
@@ -147,8 +149,8 @@ class TFL3ServiceProvider(base.L3ServiceProvider):
         if not self._validate_l3_flavor(context, router_id):
             return
         self._update_floatingip_status(context, fip_dict)
-        self.driver.update_floatingip(context, fip_dict['id'], {
-                                      'floatingip': fip_dict})
+        self.driver.update_floatingip(context, fip_dict['id'],
+                                      {'floatingip': fip_dict})
 
     @registry.receives(resources.FLOATING_IP, [events.PRECOMMIT_DELETE])
     @log_helpers.log_method_call
@@ -156,3 +158,15 @@ class TFL3ServiceProvider(base.L3ServiceProvider):
         context = kwargs['context']
         fip_id = kwargs['port']['device_id']
         self.driver.delete_floatingip(context, fip_id)
+
+    @registry.receives(resources.ROUTER, [
+        events.AFTER_CREATE,
+        events.AFTER_UPDATE,
+        events.AFTER_DELETE,
+    ])
+    @log_helpers.log_method_call
+    def snat_synchronization(self, resource, event, trigger, **kwargs):
+        context = kwargs['context']
+        router_id = kwargs['router_id']
+        router = kwargs['router']
+        self.snat_sync.sync_snat_interfaces(context, router_id, router)
