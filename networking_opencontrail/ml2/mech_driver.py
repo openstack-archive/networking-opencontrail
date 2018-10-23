@@ -18,12 +18,16 @@ from oslo_log import log as logging
 import networking_opencontrail.drivers.drv_opencontrail as drv
 from neutron_lib.plugins.ml2 import api
 
+from networking_opencontrail.l3 import snat_synchronizer
 from networking_opencontrail.ml2 import opencontrail_sg_callback
 from networking_opencontrail.ml2 import subnet_dns_integrator
 
 LOG = logging.getLogger(__name__)
-OMIT_DEVICES_TYPES = ["network:floatingip",
-                      subnet_dns_integrator.TF_DNS_DEVICE_OWNER]
+OMIT_DEVICES_TYPES = [
+    "network:floatingip",
+    snat_synchronizer.TF_SNAT_DEVICE_OWNER,
+    subnet_dns_integrator.TF_DNS_DEVICE_OWNER,
+]
 
 
 class OpenContrailMechDriver(api.MechanismDriver):
