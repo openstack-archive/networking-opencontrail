@@ -18,9 +18,12 @@ import os
 import requests
 import uuid
 
+from time import time as now
+from random import randint
+
 from keystoneauth1 import identity
 from keystoneauth1 import session
-from keystoneclient.v3 import client
+from keystoneclient.v3 import client as keystone
 from neutronclient.v2_0 import client as neutron
 from oslotest import base
 
@@ -45,11 +48,107 @@ class IntegrationTestCase(base.BaseTestCase):
                                    project_domain_id='default',
                                    user_domain_id='default')
         sess = session.Session(auth=auth)
-        self.neutron = neutron.Client(session=sess)
 
-        # Requesting contrail for keystone projects enforces contrail
-        # to synchronize them
-        keystone = client.Client(session=sess)
-        projs = [str(uuid.UUID(proj.id)) for proj in keystone.projects.list()]
-        url = '{}/project/{}'
-        [requests.get(url.format(self.contrail_api, p_id)) for p_id in projs]
+        self.neutron = neutron.Client(session=sess)
+        self.keystone = keystone.Client(session=sess)
+
+        # Create keystone project and make TF synchronize it
+        self.project = self._create_keystone_project_for_test()
+        self.tf_get_resource('project', self.project.id)
+
+        self.neutronCleanupQueue = []
+
+    def tearDown(self):
+        super(IntegrationTestCase, self).tearDown()
+        for resource, f_delete in reversed(self.neutronCleanupQueue):
+            f_delete(resource['id'])
+        self.project.delete()
+        self._cleanup_tf_project()
+
+    def tf_request_resource(self, resource_name, id):
+        return requests.get(
+            '{}/{}/{}'.format(
+                self.contrail_api, resource_name, uuid.UUID(id)))
+
+    def tf_get_resource(self, resource_name, id):
+        response = self.tf_request_resource(resource_name=resource_name, id=id)
+        self.assertIn(response.status_code, {200, 301, 302, 303, 304})
+        ret = response.json()
+        self.assertIsNotNone(ret.get(resource_name))
+        return ret.get(resource_name)
+
+    def tf_delete_resource(self, resource, id):
+        return requests.delete(
+            '{}/{}/{}'.format(
+                self.contrail_api, resource, uuid.UUID(id)))
+
+    def _cleanup_tf_project(self):
+        # Need to clean up default-openstack Security Group before we can
+        # delete the project from TF completely
+        # TODO: check to do this properly
+
+        tf_project = self.tf_get_resource('project', self.project.id)
+        # TODO(maciej.jagiello) debug why sg is not deleted while deleting project
+        for sg in tf_project.get('security_groups', []):
+            if 'default-openstack' in sg['to']:
+                requests.delete(sg['href'])
+                break
+        self.tf_delete_resource('project', self.project.id)
+
+    def _create_keystone_project_for_test(self):
+        proj_name = self.__class__.__name__ + '-' + \
+            str(int(now())) + '-' + \
+            '{0:9}'.format(randint(100000000, 999999999))
+        project = self.keystone.projects.create(
+            name=proj_name, domain='default', description='', enabled=True)
+        return project
+
+    def _add_neutron_resource_to_cleanup(self, resource, f_cleanup):
+        self.neutronCleanupQueue.append((resource, f_cleanup))
+
+    def _remove_neutron_resource_from_cleanup(self, resource_tuple):
+        self.neutronCleanupQueue.remove(resource_tuple)
+
+    def q_create_resource(self, body):
+        res_name = body.keys()[0]
+        f_create = getattr(self.neutron, 'create_' + res_name)
+        f_delete = getattr(self.neutron, 'delete_' + res_name)
+
+        resource = f_create(body)
+        self._add_neutron_resource_to_cleanup(resource[res_name], f_delete)
+        return resource
+
+    def q_delete_resource(self, resource):
+        match = [res for res in self.neutronCleanupQueue if resource in res]
+        if match:
+            match[0][1](match[0][0]['id'])
+            self._remove_neutron_resource_from_cleanup(match[0])
+
+    def q_create_network(self, name, **kwargs):
+        network = {}
+        network.update(kwargs)
+        network['name'] = name
+        network['project_id'] = self.project.id
+        network_body = {}
+        network_body['network'] = network
+        return self.q_create_resource(network_body)
+
+    def q_create_subnet(self, name, **kwargs):
+        subnet = {}
+        subnet.update(kwargs)
+        subnet['name'] = name
+        subnet_body = {}
+        subnet_body['subnet'] = subnet
+        return self.q_create_resource(subnet_body)
+
+    def q_create_floating_ip(self, **kwargs):
+        floating_ip = {}
+        floating_ip.update(kwargs)
+        floating_ip['tenant_id'] = self.project.id
+        floating_ip['project_id'] = self.project.id
+        floating_ip_body = {}
+        floating_ip_body['floatingip'] = floating_ip
+        return self.q_create_resource(floating_ip_body)
+
+    def q_delete_floating_ip(self, floating_ip):
+        self.q_delete_resource(floating_ip['floatingip'])
