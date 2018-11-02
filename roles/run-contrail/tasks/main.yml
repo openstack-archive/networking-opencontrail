@@ -16,10 +16,16 @@
   retries: 30
   delay: 5
 
+- name: Get vrouter docker name
+  become: yes
+  register: vrouter_docker_name
+  shell: |
+    docker ps --filter ancestor=opencontrailnightly/contrail-vrouter-agent --format "{{'{{.Names}}'}}"
+
 - name: Copy vrouter
   become: yes
   shell: |
-    docker cp vrouter_vrouter-agent_1:/usr/bin/vrouter-port-control /usr/bin/
+    docker cp {{ vrouter_docker_name.stdout }}:/usr/bin/vrouter-port-control /usr/bin/
 
 - name: Run contrail-status
   shell: |
