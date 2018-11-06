@@ -20,7 +20,7 @@
   become: yes
   register: vrouter_docker_name
   shell: |
-    docker ps --filter ancestor=opencontrailnightly/contrail-vrouter-agent --format {{' "{{.Names}}" '}}
+    docker ps ---filter "label=net.juniper.contrail.container.name=contrail-vrouter-agent" --format {{' "{{.Names}}" '}}
 
 - name: Copy vrouter
   become: yes
