@@ -1,0 +1,8 @@
+Code-Review+2: Maciej Jagiello <maciej.jagiello@codilime.com>
+Workflow+1: Maciej Jagiello <maciej.jagiello@codilime.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Fri, 30 Nov 2018 13:02:45 +0000
+Reviewed-on: https://review.openstack.org/612314
+Project: openstack/networking-opencontrail
+Branch: refs/heads/master
