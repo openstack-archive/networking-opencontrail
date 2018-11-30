@@ -61,22 +61,28 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
         Invokes back-end driver to create router in OpenContrail.
         """
         try:
-            router = self.driver.create_router(context, router)
+            ret_router = self.driver.create_router(context, router)
+
+            gw_fixed_ips = self._get_gw_fixed_ips(router)
+            if gw_fixed_ips:
+                ret_router["external_gateway_info"][
+                    "external_fixed_ips"] = gw_fixed_ips
+
             session = db_api.get_writer_session()
             with session.begin(subtransactions=True):
                 super(OpenContrailRouterHandler,
-                      self).create_router(context, {'router': router})
+                      self).create_router(context, {'router': ret_router})
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 LOG.error("Failed to create a router %(id)s: %(err)s",
-                          {"id": router["id"], "err": e})
+                          {"id": ret_router["id"], "err": e})
                 try:
-                    self.driver.delete_router(context, router['id'])
+                    self.driver.delete_router(context, ret_router['id'])
                 except Exception:
                     LOG.exception("Failed to delete router %s",
-                                  router['id'])
+                                  ret_router['id'])
 
-        return router
+        return ret_router
 
     @log_helpers.log_method_call
     def delete_router(self, context, router_id):
@@ -316,3 +322,9 @@ class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
             LOG.error("Failed to disassociate floating ips on port %(id)s: "
                       "%(err)s", {"id": port_id, "err": e})
             raise
+
+    def _get_gw_fixed_ips(self, router):
+        external_gw = router["router"].get("external_gateway_info", None)
+        if external_gw and "external_fixed_ips" in external_gw:
+            return list(external_gw['external_fixed_ips'])
+        return None
