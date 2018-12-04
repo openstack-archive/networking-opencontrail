@@ -50,7 +50,7 @@ neutron_tempest_plugin\.api\.test_routers\.DvrRoutersTest\.test_create_distribut
 neutron_tempest_plugin\.api\.test_routers\.HaRoutersTest.*
 
 # vRouter cannot set port’s status to ACTIVE as openvswitch does
-# neutron_tempest_plugin\.api\.admin\.test_dhcp_agent_scheduler\.DHCPAgentSchedulersTestJSON\.test_dhcp_port_status_active
+neutron_tempest_plugin\.api\.admin\.test_dhcp_agent_scheduler\.DHCPAgentSchedulersTestJSON\.test_dhcp_port_status_active
 neutron_tempest_plugin\.api\.test_routers\.RoutersTest\.test_router_interface_status
 neutron_tempest_plugin\.api\.test_routers\.RoutersIpV6Test\.test_router_interface_status
 
