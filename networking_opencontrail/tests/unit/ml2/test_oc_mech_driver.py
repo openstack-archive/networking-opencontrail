@@ -19,6 +19,7 @@ import mock
 from neutron.tests.unit import testlib_api
 
 from networking_opencontrail.ml2 import mech_driver
+from networking_opencontrail.ml2 import subnet_helper
 
 
 class OpenContrailTestCases(testlib_api.SqlTestCase):
@@ -31,6 +32,7 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
     def setUp(self):
         super(OpenContrailTestCases, self).setUp()
         self.fake_api = mock.MagicMock()
+        subnet_helper.SubnetDNSCompatibilityIntegrator = mock.MagicMock()
         mech_driver.drv = mock.MagicMock()
         self.drv = mech_driver.OpenContrailMechDriver()
         self.drv.initialize()
@@ -103,15 +105,26 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
 
         subnet_context, subnet = self.get_subnet_context(tenant_id, network_id,
                                                          subnet_id)
-        self.drv.create_subnet_postcommit(subnet_context)
+        dns_port = self.get_dns_port_data(subnet['subnet'])
+        with mock.patch.object(mech_driver.drv, 'create_subnet', subnet):
+            self.drv.create_subnet_postcommit(subnet_context)
 
-        expected_calls = [
+        expected_drv_calls = [
             mock.call.OpenContrailDrivers(),
             mock.call.OpenContrailDrivers().create_subnet(
                 subnet_context._plugin_context, subnet)
         ]
 
-        mech_driver.drv.assert_has_calls(expected_calls)
+        expected_subnet_calls = [
+            mock.call.SubnetDNSCompatibilityIntegrator(),
+            mock.call.SubnetDNSCompatibilityIntegrator(
+                ).create_tf_dns_in_neutron(subnet_context, dns_port)
+        ]
+
+        mech_driver.drv.assert_has_calls(expected_drv_calls)
+        subnet_helper.SubnetDNSCompatibilityIntegrator.assert_has_calls(
+            expected_subnet_calls
+        )
 
     def test_delete_subnet(self):
         network_id = 'test_net1'
@@ -305,7 +318,8 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
         subnet = {'id': sub_id,
                   'network_id': net_id,
                   'tenant_id': ten_id,
-                  'name': sub_name}
+                  'name': sub_name,
+                  'dns_server_address': '10.10.10.2'}
         context = fake_subnet_context(ten_id, subnet, subnet)
         subnt = {'subnet': subnet}
         return context, subnt
@@ -322,6 +336,17 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
         context = fake_port_context(ten_id, port, port)
         prt = {'port': port}
         return context, prt
+
+    def get_dns_port_data(self, subnet):
+        port = {'tenant_id': subnet['tenant_id'],
+                'network_id': subnet['network_id'],
+                'fixed_ips': [{'ip_address': subnet['dns_server_address']}],
+                'device_id': subnet['id'],
+                'device_owner': 'tf-compatibility:dns',
+                'admin_state_up': True,
+                'name': 'tungstenfabric-dns-server'}
+        prt = {'port': port}
+        return prt
 
 
 class fake_network_context(object):
