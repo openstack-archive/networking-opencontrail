@@ -19,6 +19,7 @@ import networking_opencontrail.drivers.drv_opencontrail as drv
 from neutron_lib.plugins.ml2 import api
 
 from networking_opencontrail.ml2 import opencontrail_sg_callback
+from networking_opencontrail.ml2 import subnet_helper
 
 LOG = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
         self.drv = drv.OpenContrailDrivers()
         self.sg_handler = (
             opencontrail_sg_callback.OpenContrailSecurityGroupHandler(self))
+        self.subnet_handler = subnet_helper.SubnetSynchronizeHelper()
         LOG.info("Initialization of networking-opencontrail plugin: COMPLETE")
 
     def create_network_precommit(self, context):
@@ -80,7 +82,10 @@ class OpenContrailMechDriver(api.MechanismDriver):
         """Create a subnet in OpenContrail."""
         subnet = {'subnet': context.current}
         try:
-            self.drv.create_subnet(context._plugin_context, subnet)
+            ret_subnet = self.drv.create_subnet(context._plugin_context,
+                                                subnet)
+            self.subnet_handler.create_tf_dns_in_neutron(
+                context._plugin_context, ret_subnet)
         except Exception:
             LOG.exception("Create Subnet Failed")
 
@@ -114,8 +119,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
         """Create a port in OpenContrail."""
         port = {'port': dict(context.current)}
 
-        if port['port']['device_owner'] == "network:floatingip":
-            LOG.debug("Port is floating IP: omit callback to Contrail")
+        if self._is_callback_to_omit(port['port']['device_owner']):
             return
 
         try:
@@ -130,8 +134,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
         """Update a port in OpenContrail."""
         port = {'port': dict(context.current)}
 
-        if port['port']['device_owner'] == "network:floatingip":
-            LOG.debug("Port is floating IP: omit callback to Contrail")
+        if self._is_callback_to_omit(port['port']['device_owner']):
             return
 
         try:
@@ -147,8 +150,7 @@ class OpenContrailMechDriver(api.MechanismDriver):
         """Delete a port from OpenContrail."""
         port = context.current
 
-        if port['device_owner'] == "network:floatingip":
-            LOG.debug("Port is floating IP: omit callback to Contrail")
+        if self._is_callback_to_omit(port['device_owner']):
             return
 
         try:
@@ -205,3 +207,16 @@ class OpenContrailMechDriver(api.MechanismDriver):
             self.drv.delete_security_group_rule(context, sgr_id)
         except Exception:
             LOG.exception('Failed to delete Security Group rule %s' % sgr_id)
+
+    def _is_callback_to_omit(self, device_owner):
+        # Operation on port should be not propagated to TungstenFabric when:
+        # 1) device type have ports in Neutron, which are not necessary in TF
+        # 2) port is created by plugin to be compatibility with TF
+        omit_device_types = ["network:floatingip",
+                             subnet_helper.TF_DNS_DEVICE_OWNER]
+
+        if device_owner in omit_device_types:
+            LOG.debug("Port device is %s: omit callback to TungstenFabric" %
+                      device_owner)
+            return True
+        return False
