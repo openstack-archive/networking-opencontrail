@@ -12,8 +12,8 @@ Playbooks deploy OpenStack in master version and OpenContrail in one of the late
 
 Overview of deployment architecture:
 
-.. image:: deployment_architecture.png
-    :width: 600px
+.. figure:: deployment_architecture.png
+    :width: 100%
     :align: center
     :alt: Diagram of deployment architecture
 

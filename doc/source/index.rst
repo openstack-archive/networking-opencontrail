@@ -20,6 +20,7 @@ Contents
    usage
    flavors
    architecture
+   architecture/dns_port
    troubleshooting
    contributing
 
