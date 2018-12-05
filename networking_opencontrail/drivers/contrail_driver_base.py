@@ -277,7 +277,7 @@ class OpenContrailDriversBase(object):
 
     def get_port(self, context, port_id, fields=None):
         """Gets the attributes of a particular port."""
-
+        LOG.warning("Get port from TF: %s" % port_id)
         return self._get_port(context, port_id, fields)
 
     def update_port(self, context, port_id, port):
