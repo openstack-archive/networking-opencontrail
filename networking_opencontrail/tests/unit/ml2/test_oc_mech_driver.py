@@ -31,6 +31,7 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
     def setUp(self):
         super(OpenContrailTestCases, self).setUp()
         self.fake_api = mock.MagicMock()
+        mech_driver.subnet_dns_integrator = mock.MagicMock()
         mech_driver.drv = mock.MagicMock()
         self.drv = mech_driver.OpenContrailMechDriver()
         self.drv.initialize()
@@ -103,15 +104,26 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
 
         subnet_context, subnet = self.get_subnet_context(tenant_id, network_id,
                                                          subnet_id)
+        self.mock_drv_opencontrail_method('create_subnet', subnet['subnet'])
+
         self.drv.create_subnet_postcommit(subnet_context)
 
-        expected_calls = [
+        expected_drv_calls = [
             mock.call.OpenContrailDrivers(),
             mock.call.OpenContrailDrivers().create_subnet(
                 subnet_context._plugin_context, subnet)
         ]
+        expected_dns_integrator_calls = [
+            mock.call.SubnetDNSCompatibilityIntegrator(),
+            mock.call.SubnetDNSCompatibilityIntegrator(
+                ).create_tf_dns_in_neutron(subnet_context._plugin_context,
+                                           subnet['subnet'])
+        ]
 
-        mech_driver.drv.assert_has_calls(expected_calls)
+        mech_driver.drv.assert_has_calls(expected_drv_calls)
+        mech_driver.subnet_dns_integrator.assert_has_calls(
+            expected_dns_integrator_calls
+        )
 
     def test_delete_subnet(self):
         network_id = 'test_net1'
@@ -223,6 +235,43 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
 
         mech_driver.drv.assert_has_calls(expected_calls)
 
+    def test_create_port_omit_callback(self):
+        network_id = 'test_net1'
+        tenant_id = 'ten-1'
+        port_id = 'port-1'
+        owner = mech_driver.OMIT_DEVICES_TYPES[0]
+
+        port_context, _ = self.get_port_context(tenant_id, network_id,
+                                                port_id, device_owner=owner)
+        self.drv.create_port_postcommit(port_context)
+
+        mech_driver.drv.OpenContrailDrivers().create_port.assert_not_called()
+
+    def test_delete_port_omit_callback(self):
+        network_id = 'test_net1'
+        tenant_id = 'ten-1'
+        port_id = 'port-1'
+        owner = mech_driver.OMIT_DEVICES_TYPES[0]
+
+        port_context, _ = self.get_port_context(tenant_id, network_id,
+                                                port_id, device_owner=owner)
+        self.drv.delete_port_postcommit(port_context)
+
+        mech_driver.drv.OpenContrailDrivers().delete_port.assert_not_called()
+
+    def test_update_port_omit_callback(self):
+        network_id = 'test_net1'
+        tenant_id = 'ten-1'
+        port_id = 'port-1'
+        owner = mech_driver.OMIT_DEVICES_TYPES[0]
+
+        port_context, _ = self.get_port_context(tenant_id, network_id,
+                                                port_id, device_owner=owner)
+
+        self.drv.update_port_postcommit(port_context)
+
+        mech_driver.drv.OpenContrailDrivers().update_port.assert_not_called()
+
     def test_create_security_group(self):
         ctx = fake_plugin_context('ten-1')
         sg = {'id': 'sg-1', 'name': 'test-security-group'}
@@ -289,6 +338,10 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
 
         mech_driver.drv.assert_has_calls(expected_calls)
 
+    def mock_drv_opencontrail_method(self, method_name, return_value):
+        mocked_method = mock.Mock(return_value=return_value)
+        setattr(self.drv.drv, method_name, mocked_method)
+
     def get_network_context(self, ten_id, net_id, net_name=None):
         if not net_name:
             net_name = 'test_network'
@@ -305,7 +358,8 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
         subnet = {'id': sub_id,
                   'network_id': net_id,
                   'tenant_id': ten_id,
-                  'name': sub_name}
+                  'name': sub_name,
+                  'dns_server_address': '10.10.10.2'}
         context = fake_subnet_context(ten_id, subnet, subnet)
         subnt = {'subnet': subnet}
         return context, subnt
