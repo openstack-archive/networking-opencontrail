@@ -31,6 +31,7 @@ neutron_tempest_plugin\.scenario\.test_security_groups\.NetworkSecGroupTest\.tes
 neutron_tempest_plugin\.scenario\.test_floatingip.*test_east_west.*
 neutron_tempest_plugin\.scenario\.test_floatingip\.FloatingIPPortDetailsTest\.test_floatingip_port_details
 neutron_tempest_plugin\.scenario\.test_portsecurity\.PortSecurityTest\.test_port_security_removed_added
+neutron_tempest_plugin\.scenario\.test_connectivity\.NetworkConnectivityTest\.test_connectivity_through_2_routers
 .*traffic.*
 
 # Exclude not supported features
