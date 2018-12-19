@@ -18,6 +18,7 @@ Contents
    installation/playbooks
    devstack
    usage
+   flavors
    troubleshooting
    contributing
 
