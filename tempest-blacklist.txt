@@ -62,3 +62,7 @@ tempest\.api\.network\.admin\.test_l3_agent_scheduler\.L3AgentSchedulerTestJSON
 # There is a conflict between how Neutron and vnc_openstack behave
 # Vnc_openstack does not allow adding new fixed ip for already existed port
 tempest\.scenario\.test_network_v6\.TestGettingAddress\.test_dualnet_multi_prefix_slaac
+
+# This test needs update in vnc_openstack to allow updating fixed ip
+# Opened bug in vnc_openstack: https://contrail-jws.atlassian.net/browse/JCB-183280
+tempest\.api\.network\.test_dhcp_ipv6\.NetworksTestDHCPv6\.test_dhcp_stateful_router
