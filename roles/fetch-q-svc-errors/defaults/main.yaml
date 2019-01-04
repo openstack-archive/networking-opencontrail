@@ -1,0 +1,1 @@
+log_output_dir: "{{ ansible_user_dir }}/logs"

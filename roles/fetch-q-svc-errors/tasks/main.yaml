@@ -1,0 +1,14 @@
+---
+- name: Ensure directory for output exist
+  become: true
+  file:
+    path: "{{ log_output_dir }}"
+    state: directory
+
+- name: Collect errors from q-svc journual
+  become: yes
+  shell:
+    cmd: |
+      journalctl -o short-precise --unit devstack@q-svc | \
+        grep -E '(ERROR|CRITICAL)' | \
+        gzip - > {{ log_output_dir }}/errors-q-svc.txt.gz
