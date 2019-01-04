@@ -1,0 +1,8 @@
+---
+- name: Collect errors from q-svc journual
+  become: yes
+  shell:
+    cmd: |
+      journalctl -o short-precise --unit devstack@q-svc | \
+        grep -E '(ERROR|CRITICAL)' | \
+        gzip - > {{ zuul.executor.log_root }}/errors-q-svc.txt.gz
