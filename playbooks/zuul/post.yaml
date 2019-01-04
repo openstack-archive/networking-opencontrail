@@ -11,3 +11,5 @@
     - role: fetch-docker-logs
     - role: fetch-ansible-logs
     - role: fetch-contrail-logs
+    - role: fetch-q-svc-errors
+
