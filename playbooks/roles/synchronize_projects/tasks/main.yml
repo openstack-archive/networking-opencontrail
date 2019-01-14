@@ -1,0 +1,33 @@
+#!/usr/bin/env ansible-playbook
+
+- name: Restart horizon
+  become: yes
+  service:
+      name: httpd
+      state: restarted
+      enabled: yes
+- name: Get contrail config api docker name
+  become: yes
+  register: contrail_config_api_docker_name
+  shell: |
+      docker ps --filter "label=net.juniper.contrail.container.name=contrail-controller-config-api" --format {{' "{{.Names}}" '}}
+- name: Restart contrail config api
+  shell: |
+      docker restart "{{ contrail_config_api_docker_name.stdout }}"
+- name: Wait for Contrail API to come up
+  uri:
+    url: "http://{{ hostvars['contrail_controller'].ansible_host }}:8082/projects"
+    status_code:
+    - 200
+    - 304
+    validate_certs: no
+  register: result
+  until: result.status == 200 or result.status == 304
+  retries: 30
+  delay: 5
+- name: Synchronize projects
+  script: sync_projects.py {{ hostvars['contrail_controller'].ansible_host }}
+  register: sync_result
+- name: Print project synchronization status
+  debug:
+    var: sync_result.stdout_lines
