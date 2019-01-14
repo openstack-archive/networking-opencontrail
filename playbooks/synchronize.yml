@@ -1,0 +1,25 @@
+#!/usr/bin/env ansible-playbook
+
+- include: change_password.yml
+- include: fix_docker_bip.yml
+- include: main.yml
+- hosts: controller
+  tasks:
+  - name: Restart horizon
+    become: yes
+    shell: systemctl restart httpd
+  - name: Restart contrail
+    shell: docker restart config_api_1
+  - name: Wait for Contrail API to come up
+    uri:
+      url: "http://{{ hostvars['tf_controller'].ansible_host }}:8082/projects"
+      status_code:
+      - 200
+      - 304
+      validate_certs: no
+    register: result
+    until: result.status == 200 or result.status == 304
+    retries: 30
+    delay: 5
+  - name: synchronize projects
+    script: sync.py {{ hostvars['tf_controller'].ansible_host }}
