@@ -1,19 +1,19 @@
 ---
 # IP address for OpenConrail (e.g. 192.168.0.2)
-contrail_ip:
+contrail_ip: 192.168.0.20
 
 # Gateway address for OpenConrail (e.g. 192.168.0.1)
-contrail_gateway:
+contrail_gateway: 192.168.0.1
 
 # Interface name for OpenConrail (e.g. eth0)
-contrail_interface:
+contrail_interface: eth0
 
 
 # IP address for Openstack VM (e.g. 192.168.0.3)
-openstack_ip:
+openstack_ip: 192.168.0.20
 
 # Openstack branch used on VMs.
-openstack_branch: stable/ocata
+openstack_branch: master
 
 # If true, then install networking_bgpvpn plugin with contrail driver
 install_networking_bgpvpn_plugin: false

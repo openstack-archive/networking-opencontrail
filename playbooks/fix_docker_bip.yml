@@ -1,0 +1,9 @@
+---
+- hosts: compute
+  tasks:
+    # Optional - uncomment if you have conflict between docker network subnet and your local network subnet
+    - name: Change docker bip
+      become: yes
+      shell: |
+        mkdir -p /etc/docker
+        echo '{"bip": "10.255.0.1/16"}' > /etc/docker/daemon.json
