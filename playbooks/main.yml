@@ -1,17 +1,34 @@
 #!/usr/bin/env ansible-playbook
 
+- include: change_password.yml
+- include: fix_docker_bip.yml
+- include: setup_nodes.yml
 - hosts: controller
-  roles:
-    - devstack_controller_node
-    - restack_controller_node
-- hosts: compute
-  roles:
-    - contrail_node
-- hosts: controller
-  roles:
-    - { role: networking_bgpvpn_plugin, when: install_networking_bgpvpn_plugin }
-    - { role: restack_controller_node, when: install_networking_bgpvpn_plugin }
-- hosts: compute
-  roles:
-    - devstack_compute_node
-    - restack_compute_node
+  tasks:
+  - name: Restart horizon
+    become: yes
+    service:
+        name: httpd
+        state: restarted
+        enabled: yes
+  - name: Get contrail config api docker name
+    become: yes
+    register: contrail_config_api_docker_name
+    shell: |
+        docker ps --filter "label=net.juniper.contrail.container.name=contrail-controller-config-api" --format {{' "{{.Names}}" '}}
+  - name: Restart contrail config api
+    shell: |
+        docker restart "{{ contrail_config_api_docker_name.stdout }}"
+  - name: Wait for Contrail API to come up
+    uri:
+      url: "http://{{ hostvars['contrail_controller'].ansible_host }}:8082/projects"
+      status_code:
+      - 200
+      - 304
+      validate_certs: no
+    register: result
+    until: result.status == 200 or result.status == 304
+    retries: 30
+    delay: 5
+  - import_role:
+      name: synchronize_projects

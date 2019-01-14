@@ -1,0 +1,8 @@
+#!/usr/bin/env ansible-playbook
+
+- name: Synchronize projects
+  script: sync_projects.py {{ hostvars['contrail_controller'].ansible_host }}
+  register: sync_result
+- name: Print project synchronization status
+  debug:
+    var: sync_result.stdout_lines
