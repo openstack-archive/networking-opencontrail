@@ -1,0 +1,10 @@
+Code-Review+1: Kamil Mańkowski <kamil.mankowski+one@codilime.com>
+Code-Review+1: Filippo Inzaghi <zhao.daqing@99cloud.net>
+Code-Review+2: Maciej Jagiello <maciej.jagiello@codilime.com>
+Workflow+1: Maciej Jagiello <maciej.jagiello@codilime.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Mon, 14 Jan 2019 08:35:06 +0000
+Reviewed-on: https://review.openstack.org/630197
+Project: openstack/networking-opencontrail
+Branch: refs/heads/master
