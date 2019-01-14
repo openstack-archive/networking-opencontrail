@@ -1,4 +1,8 @@
-controller ansible_host=openstack-node ansible_user=ubuntu
+controller ansible_host=openstack-node ansible_user=centos
+
+# This host should be one from the compute host group.
+# Playbooks are not prepared to deploy tungsten fabric compute node separately.
+tf_controller ansible_host=tf-node ansible_user=centos
 
 [compute]
-contrail-node ansible_user=centos
+tf-node ansible_user=centos

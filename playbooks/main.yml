@@ -4,7 +4,7 @@
   roles:
     - devstack_controller_node
     - restack_controller_node
-- hosts: compute
+- hosts: tf_controller
   roles:
     - contrail_node
 - hosts: controller
@@ -12,6 +12,8 @@
     - { role: networking_bgpvpn_plugin, when: install_networking_bgpvpn_plugin }
     - { role: restack_controller_node, when: install_networking_bgpvpn_plugin }
 - hosts: compute
+  vars:
+    separate_nodes: "{{ hostvars['controller'].ansible_host not in groups['compute'] }}"
   roles:
-    - devstack_compute_node
-    - restack_compute_node
+  - { role: devstack_compute_node, when: separate_nodes }
+  - { role: restack_compute_node, when: separate_nodes }
