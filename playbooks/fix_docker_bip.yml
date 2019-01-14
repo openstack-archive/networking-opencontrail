@@ -1,0 +1,9 @@
+---
+- hosts: compute
+  tasks:
+    - name: Change docker bip
+      become: yes
+      shell: |
+        mkdir -p /etc/docker
+        echo '{"bip": "10.255.0.1/16"}' > /etc/docker/daemon.json
+      when: fix_docker_bip
