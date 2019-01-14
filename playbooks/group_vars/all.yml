@@ -13,7 +13,13 @@ contrail_interface:
 openstack_ip:
 
 # Openstack branch used on VMs.
-openstack_branch: stable/ocata
+openstack_branch: master
 
 # If true, then install networking_bgpvpn plugin with contrail driver
 install_networking_bgpvpn_plugin: false
+
+# If true, password to the created instances will be set to 'userpass1'
+change_password: false
+
+# Set to true if you have conflict between docker network subnet and your local network subnet
+fix_docker_bip: false
