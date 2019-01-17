@@ -4,10 +4,11 @@ Setup development VMs
 
 Playbooks are designed to setup two nodes. The first node
 contains Openstack with, keystone, neutron, horizon, etc.
-It has also neutron-opencontrail plugin as neutron ML2 L3 driver.
+It has also networking-opencontrail plugin as neutron ML2 plugin
+and service plugin for L3 driver.
 Second node contains nightly-build contrail node with simple devstack as compute node.
 
-Playbooks deploy Openstack in stable/ocata version and OpenContrail in one of the latest nightly build.
+Playbooks deploy Openstack in queens version and OpenContrail in one of the latest nightly build.
 
 Overview of deployment architecture:
 
@@ -81,7 +82,7 @@ Optionally, you can add a username to this config, if you ssh to machine with us
 ``contrail_gateway`` should be gateway address of the contrail_ip.
 ``contrail_interface`` should be interface name that has bound contrail ip.
 
-``openstack_branch`` should be set to ``stable/ocata``
+``openstack_branch`` should be set to ``master``
 ``install_networking_bgpvpn_plugin`` is a boolean value. If set true, it will install the neutron_bgpvpn plugin.
 
 .. code-block:: yaml
@@ -100,7 +101,7 @@ Optionally, you can add a username to this config, if you ssh to machine with us
     openstack_ip: 192.168.0.3
 
     # Openstack branch used on VMs.
-    openstack_branch: stable/ocata
+    openstack_branch: master
 
     # If true, then install networking_bgpvpn plugin with contrail driver
     install_networking_bgpvpn_plugin: false
@@ -151,12 +152,11 @@ Assuming that contrail node has ``contrail-node.novalocal`` hostname (used in av
 .. code-block:: console
 
     source ~/devstack/openrc admin demo
-    openstack network create --provider-network-type vlan --provider-segment 3 --provider-physical-network vhost net
+    openstack network create net
     openstack subnet create --network net --subnet-range 192.168.1.0/24 --dhcp subnet
-    openstack security group create secgroup
-    openstack security group rule create --ingress --protocol icmp secgroup
-    openstack security group rule create --ingress --protocol tcp secgroup
-    openstack server create  --flavor cirros256 --image cirros-0.3.4-x86_64-uec --nic net-id=net --security-group secgroup \
+    openstack security group rule create --ingress --protocol icmp default
+    openstack security group rule create --ingress --protocol tcp default
+    openstack server create --flavor cirros256 --image cirros-0.3.6-x86_64-uec --nic net-id=net \
       --availability-zone nova:contrail-node.novalocal instance
 
 Created VM could be accessed by VNC (through horizon):
@@ -164,8 +164,5 @@ Created VM could be accessed by VNC (through horizon):
 1. Go to horizon's list of VMs http://10.100.0.3/dashboard/project/instances/
 
 2. Enter into the VM's console.
-
-  - If the console does not response, click the link "Click here to show only console".
-  - If you see black console, press enter to attach.
 
 3. Login into. Default login/password is ``cirros/cubswin:)``

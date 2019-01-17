@@ -48,7 +48,7 @@ Q_ML2_PLUGIN_MECHANISM_DRIVERS=opencontrail
 
 [[post-config|$NEUTRON_CORE_PLUGIN_CONF]]
 [ml2]
-type_drivers = local,flat,vlan,gre,vxlan,geneve
-tenant_network_types = vlan,vxlan
-mechanism_drivers = opencontrail,openvswitch,linuxbridge
+type_drivers = local,vlan,gre
+tenant_network_types = local,vlan
+mechanism_drivers = opencontrail
 extension_drivers = port_security
