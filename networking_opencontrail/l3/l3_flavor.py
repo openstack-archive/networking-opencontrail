@@ -33,10 +33,12 @@ class TFL3ServiceProvider(base.L3ServiceProvider):
             return self._flavor_plugin_ref
 
     def _validate_l3_flavor(self, context, router_id, flavor_id=None):
-        if router_id is None:
+        if router_id is None or flavor_id is q_const.ATTR_NOT_SPECIFIED:
             return False
         if not flavor_id:
             router = l3_obj.Router.get_object(context, id=router_id)
+            if router.flavor_id is None:
+                return False
             flavor = self._flavor_plugin.get_flavor(context, router.flavor_id)
             flavor_id = flavor['id']
 
@@ -50,15 +52,15 @@ class TFL3ServiceProvider(base.L3ServiceProvider):
         l3_obj.FloatingIP.update_object(context, {'status': status},
                                         id=fip_dict['id'])
 
-    @registry.receives(resources.ROUTER, [events.PRECOMMIT_CREATE])
+    @registry.receives(resources.ROUTER, [events.PRECOMMIT_CREATE],
+                       priority_group.PRIORITY_ROUTER_DRIVER)
     @log_helpers.log_method_call
-    def router_create_post_commit(self, resource, event, trigger, **kwargs):
+    def router_create_precommit(self, resource, event, trigger, **kwargs):
         context = kwargs['context']
-        flavor_id = kwargs['router']['flavor_id']
         router_dict = kwargs['router']
+        flavor_id = router_dict['flavor_id']
+        router_id = router_dict['id']
         router_dict['gw_port_id'] = kwargs['router_db'].gw_port_id
-        router_id = kwargs['router_id']
-        router_dict['id'] = router_id
         if not self._validate_l3_flavor(context, router_id, flavor_id):
             return
         self.driver.create_router(context, {'router': router_dict})
@@ -66,32 +68,22 @@ class TFL3ServiceProvider(base.L3ServiceProvider):
     @registry.receives(resources.ROUTER, [events.PRECOMMIT_UPDATE],
                        priority_group.PRIORITY_ROUTER_DRIVER)
     @log_helpers.log_method_call
-    def router_update_post_commit(self, resource, event, trigger, **kwargs):
-        # NOTE(manjeets) router update bypasses the driver controller
-        # and argument type is different.
-        payload = kwargs.get('payload', None)
-        if payload:
-            context = payload.context
-            router_id = payload.states[0]['id']
-            router_dict = payload.request_body
-            gw_port_id = payload.states[0]['gw_port_id']
-        else:
-            # TODO(manjeets) Remove this shim once payload is fully adapted
-            # https://bugs.launchpad.net/neutron/+bug/1747747
-            context = kwargs['context']
-            router_id = kwargs['router_db'].id
-            router_dict = kwargs['router']
-            gw_port_id = kwargs['router_db'].gw_port_id
+    def router_update_precommit(self, resource, event, trigger, payload=None):
+        context = payload.context
+        router_id = payload.resource_id
+        router_dict = payload.request_body
+        gw_port_id = payload.latest_state['gw_port_id']
+
         if not self._validate_l3_flavor(context, router_id):
             return
         if 'gw_port_id' not in router_dict:
-                router_dict['gw_port_id'] = gw_port_id
+            router_dict['gw_port_id'] = gw_port_id
         self.driver.update_router(context, router_id, {'router': router_dict})
 
     @registry.receives(resources.ROUTER, [events.PRECOMMIT_DELETE])
     @log_helpers.log_method_call
-    def router_delete_post_commit(self, resource, event, trigger, **kwargs):
-        router_id = kwargs['router_db'].id
+    def router_delete_precommit(self, resource, event, trigger, **kwargs):
+        router_id = kwargs['router_id']
         context = kwargs['context']
         if not self._validate_l3_flavor(context, router_id):
             return
@@ -147,53 +139,3 @@ class TFL3ServiceProvider(base.L3ServiceProvider):
         context = kwargs['context']
         fip_id = kwargs['port']['device_id']
         self.driver.delete_floatingip(context, fip_id)
-
-    @registry.receives(resources.FLOATING_IP,
-                       [events.BEFORE_CREATE, events.BEFORE_READ,
-                        events.BEFORE_UPDATE, events.BEFORE_DELETE,
-                        events.PRECOMMIT_CREATE, events.PRECOMMIT_UPDATE,
-                        events.PRECOMMIT_DELETE,
-                        events.PRECOMMIT_ADD_ASSOCIATION,
-                        events.PRECOMMIT_DELETE_ASSOCIATIONS,
-                        events.AFTER_CREATE, events.AFTER_READ,
-                        events.AFTER_UPDATE, events.AFTER_DELETE, ])
-    @registry.receives(resources.ROUTER_CONTROLLER,
-                       [events.BEFORE_CREATE, events.BEFORE_READ,
-                        events.BEFORE_UPDATE, events.BEFORE_DELETE,
-                        events.PRECOMMIT_CREATE, events.PRECOMMIT_UPDATE,
-                        events.PRECOMMIT_DELETE,
-                        events.PRECOMMIT_ADD_ASSOCIATION,
-                        events.PRECOMMIT_DELETE_ASSOCIATIONS,
-                        events.AFTER_CREATE, events.AFTER_READ,
-                        events.AFTER_UPDATE, events.AFTER_DELETE, ])
-    @registry.receives(resources.ROUTER,
-                       [events.BEFORE_CREATE, events.BEFORE_READ,
-                        events.BEFORE_UPDATE, events.BEFORE_DELETE,
-                        events.PRECOMMIT_CREATE, events.PRECOMMIT_UPDATE,
-                        events.PRECOMMIT_DELETE,
-                        events.PRECOMMIT_ADD_ASSOCIATION,
-                        events.PRECOMMIT_DELETE_ASSOCIATIONS,
-                        events.AFTER_CREATE, events.AFTER_READ,
-                        events.AFTER_UPDATE, events.AFTER_DELETE, ])
-    @registry.receives(resources.ROUTER_INTERFACE,
-                       [events.BEFORE_CREATE, events.BEFORE_READ,
-                        events.BEFORE_UPDATE, events.BEFORE_DELETE,
-                        events.PRECOMMIT_CREATE, events.PRECOMMIT_UPDATE,
-                        events.PRECOMMIT_DELETE,
-                        events.PRECOMMIT_ADD_ASSOCIATION,
-                        events.PRECOMMIT_DELETE_ASSOCIATIONS,
-                        events.AFTER_CREATE, events.AFTER_READ,
-                        events.AFTER_UPDATE, events.AFTER_DELETE, ])
-    @registry.receives(resources.ROUTER_GATEWAY,
-                       [events.BEFORE_CREATE, events.BEFORE_READ,
-                        events.BEFORE_UPDATE, events.BEFORE_DELETE,
-                        events.PRECOMMIT_CREATE, events.PRECOMMIT_UPDATE,
-                        events.PRECOMMIT_DELETE,
-                        events.PRECOMMIT_ADD_ASSOCIATION,
-                        events.PRECOMMIT_DELETE_ASSOCIATIONS,
-                        events.AFTER_CREATE, events.AFTER_READ,
-                        events.AFTER_UPDATE, events.AFTER_DELETE, ])
-    @log_helpers.log_method_call
-    def catch_all(self, resource, event, trigger, **kwargs):
-        # import pdb; pdb.set_trace()
-        pass
