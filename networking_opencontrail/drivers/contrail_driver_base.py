@@ -13,7 +13,6 @@
 #    under the License.
 #
 
-from neutron.common import exceptions as neutron_exc
 from neutron.db import quota_db  # noqa
 from neutron.extensions import portbindings
 from neutron.extensions import securitygroup
@@ -57,12 +56,6 @@ def _raise_contrail_error(info, obj_name):
             raise getattr(allowedaddresspairs, exc_name)(**info)
         if neutron_lib_exc and hasattr(neutron_lib_exc, exc_name):
             raise getattr(neutron_lib_exc, exc_name)(**info)
-        # Few exceptions from neutron.common module are being moved
-        # to neutron_lib.exceptions module leaving duplications.
-        # Neutron_lib must have precedence over neutron.common.
-        # That's why this check must be done at the very end.
-        if hasattr(neutron_exc, exc_name):
-            raise getattr(neutron_exc, exc_name)(**info)
     raise neutron_lib_exc.NeutronException(**info)
 
 
