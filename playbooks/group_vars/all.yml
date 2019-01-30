@@ -13,7 +13,7 @@ contrail_interface:
 openstack_ip:
 
 # Openstack branch used on VMs.
-openstack_branch: stable/ocata
+openstack_branch: master
 
 # If true, then install networking_bgpvpn plugin with contrail driver
 install_networking_bgpvpn_plugin: false
