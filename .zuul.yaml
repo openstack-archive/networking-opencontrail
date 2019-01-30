@@ -3,6 +3,7 @@
 - project:
     name: openstack/networking-opencontrail
     templates:
+      - build-openstack-docs-pti
       - openstack-lower-constraints-jobs-neutron
       - openstack-python-jobs-neutron
       - openstack-python35-jobs-neutron
