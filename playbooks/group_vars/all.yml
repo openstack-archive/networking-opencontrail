@@ -12,8 +12,11 @@ contrail_interface:
 # IP address for Openstack VM (e.g. 192.168.0.3)
 openstack_ip:
 
-# Openstack branch used on VMs.
+# Openstack branch used on VMs
 openstack_branch: stable/ocata
+
+# Tungsten Fabric docker image tag for contrail-ansible-deployer
+contrail_version: latest
 
 # If true, then install networking_bgpvpn plugin with contrail driver
 install_networking_bgpvpn_plugin: false
