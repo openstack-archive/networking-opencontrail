@@ -3,11 +3,12 @@ Setup development VMs
 =====================
 
 Playbooks are designed to setup two nodes. The first node
-contains Openstack with, keystone, neutron, horizon, etc.
-It has also neutron-opencontrail plugin as neutron ML2 L3 driver.
-Second node contains nightly-build contrail node with simple devstack as compute node.
+contains OpenStack with, keystone, neutron, horizon, etc.
+It has also networking-opencontrail plugin as neutron ML2 plugin
+and service plugin for L3 driver.
+A second node contains nightly-build contrail node with simple devstack as compute node.
 
-Playbooks deploy Openstack in stable/ocata version and OpenContrail in one of the latest nightly build.
+Playbooks deploy OpenStack in master version and OpenContrail in one of the latest nightly build.
 
 Overview of deployment architecture:
 
@@ -61,7 +62,7 @@ Configure playbooks
 
 Configuration require editing few files before running any playbook.
 
-**1. Define nodes by specifying SSH names or IP of machines in ``playbooks/hosts``**
+**1. Define nodes by specifying SSH names or IP of machines in playbooks/hosts**
 
 Change ``contrail-node`` and ``openstack-node`` to public IP of your machines.
 
@@ -72,17 +73,14 @@ Change ``contrail-node`` and ``openstack-node`` to public IP of your machines.
     [compute]
     10.100.0.2 ansible_user=centos
 
+**2. Change deployment variables in playbooks/group_vars/all.yml**
 
-Optionally, you can add a username to this config, if you ssh to machine with username: ``10.100.0.2 ansible_user=centos``
+* ``contrail_ip`` and ``openstack_ip`` should be internal IP addresses.
+* ``contrail_gateway`` should be gateway address of the contrail_ip.
+* ``contrail_interface`` should be interface name that has bound contrail ip.
 
-**2. Change deployment variables in ``playbooks/group_vars/all.yml``**
-
-``contrail_ip`` and ``openstack_ip`` should be internal IP addresses.
-``contrail_gateway`` should be gateway address of the contrail_ip.
-``contrail_interface`` should be interface name that has bound contrail ip.
-
-``openstack_branch`` should be set to ``stable/ocata``
-``install_networking_bgpvpn_plugin`` is a boolean value. If set true, it will install the neutron_bgpvpn plugin.
+* ``openstack_branch`` should be set to ``master``
+* ``install_networking_bgpvpn_plugin`` is a boolean value. If set true, it will install the neutron_bgpvpn plugin.
 
 .. code-block:: yaml
 
@@ -96,11 +94,11 @@ Optionally, you can add a username to this config, if you ssh to machine with us
     contrail_interface: eth0
 
 
-    # IP address for Openstack VM.
+    # IP address for OpenStack VM.
     openstack_ip: 192.168.0.3
 
-    # Openstack branch used on VMs.
-    openstack_branch: stable/ocata
+    # OpenStack branch used on VMs.
+    openstack_branch: master
 
     # If true, then install networking_bgpvpn plugin with contrail driver
     install_networking_bgpvpn_plugin: false
@@ -112,7 +110,7 @@ Deployment
 Run playbooks
 =============
 
-.. note:: Before openstack deployment make sure playbooks are configured.
+.. note:: Before OpenStack deployment make sure playbooks are configured.
 
 Execute ``playbooks/main.yml`` file.
 Make sure you are in playbooks directory before executing the playbooks.
@@ -137,13 +135,12 @@ Access web interface
 
 * http://10.100.0.3/ - devstack's horizon. Credentials: admin/admin
 
-* https://10.100.0.2:8143/ - OpenContrail UI. Credentials: admin/admin (domain can be empty or "default")
+* https://10.100.0.2:8143/ - OpenContrail UI. Credentials: admin/contrail123 (domain can be empty or "default")
 
 Create example VM
 =================
 
 After successful deployment, it could be possible to create sample Virtual Machine.
-It is important to create new security group, because the default is not synchronized correctly between contrail and devstack.
 
 These commands should be ran on one of the nodes (both are connected to one neutron).
 Assuming that contrail node has ``contrail-node.novalocal`` hostname (used in availability zone):
@@ -151,12 +148,11 @@ Assuming that contrail node has ``contrail-node.novalocal`` hostname (used in av
 .. code-block:: console
 
     source ~/devstack/openrc admin demo
-    openstack network create --provider-network-type vlan --provider-segment 3 --provider-physical-network vhost net
+    openstack network create net
     openstack subnet create --network net --subnet-range 192.168.1.0/24 --dhcp subnet
-    openstack security group create secgroup
-    openstack security group rule create --ingress --protocol icmp secgroup
-    openstack security group rule create --ingress --protocol tcp secgroup
-    openstack server create  --flavor cirros256 --image cirros-0.3.4-x86_64-uec --nic net-id=net --security-group secgroup \
+    openstack security group rule create --ingress --protocol icmp default
+    openstack security group rule create --ingress --protocol tcp default
+    openstack server create --flavor cirros256 --image cirros-0.3.6-x86_64-uec --nic net-id=net \
       --availability-zone nova:contrail-node.novalocal instance
 
 Created VM could be accessed by VNC (through horizon):
@@ -164,8 +160,5 @@ Created VM could be accessed by VNC (through horizon):
 1. Go to horizon's list of VMs http://10.100.0.3/dashboard/project/instances/
 
 2. Enter into the VM's console.
-
-  - If the console does not response, click the link "Click here to show only console".
-  - If you see black console, press enter to attach.
 
 3. Login into. Default login/password is ``cirros/cubswin:)``

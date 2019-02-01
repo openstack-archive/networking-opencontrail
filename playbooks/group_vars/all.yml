@@ -9,11 +9,11 @@ contrail_gateway:
 contrail_interface:
 
 
-# IP address for Openstack VM (e.g. 192.168.0.3)
+# IP address for OpenStack VM (e.g. 192.168.0.3)
 openstack_ip:
 
-# Openstack branch used on VMs.
-openstack_branch: stable/ocata
+# OpenStack branch used on VMs.
+openstack_branch: master
 
 # If true, then install networking_bgpvpn plugin with contrail driver
 install_networking_bgpvpn_plugin: false

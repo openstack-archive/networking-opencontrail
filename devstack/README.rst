@@ -32,10 +32,9 @@
     TENANT_VLAN_RANGE=1:4094
     [[post-config|$NEUTRON_CORE_PLUGIN_CONF]]
     [ml2]
-    type_drivers = local,vlan
+    type_drivers = local,vlan,gre
     tenant_network_types = local,vlan
     mechanism_drivers = opencontrail
-    extension_drivers = port_security
 
 
 #. Optionally, if you need to use secure SSL connection, specify additional
