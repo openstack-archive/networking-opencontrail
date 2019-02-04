@@ -52,3 +52,7 @@ type_drivers = local,vlan,gre
 tenant_network_types = local,vlan
 mechanism_drivers = opencontrail
 extension_drivers = port_security
+
+[[post-config|$NEUTRON_CONF]]
+[DEFAULT]
+dhcp_agent_notification = false
