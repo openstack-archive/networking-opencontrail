@@ -142,6 +142,7 @@
               router_scheduler_driver: neutron.scheduler.l3_agent_scheduler.LeastRoutersScheduler
               router_auto_schedule: true
               enable_snat_by_default: false
+              network_scheduler_driver: networking_opencontrail.agents.dhcp_scheduler.TFIgnoreDHCPScheduler
             quotas:
               # A negative value means unlimited. (integer value)
               quota_network: -1
