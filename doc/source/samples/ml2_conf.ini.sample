@@ -1,0 +1,4 @@
+[ml2]
+type_drivers = local,vlan,gre
+tenant_network_types = local,vlan
+mechanism_drivers = opencontrail
