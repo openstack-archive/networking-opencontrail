@@ -65,4 +65,9 @@ tempest\.scenario\.test_network_v6\.TestGettingAddress\.test_dualnet_multi_prefi
 
 # This test needs update in vnc_openstack to allow updating fixed ip
 # Opened bug in vnc_openstack: https://contrail-jws.atlassian.net/browse/JCB-183280
-tempest\.api\.network\.test_dhcp_ipv6\.NetworksTestDHCPv6\.test_dhcp_stateful_router
+# tempest\.api\.network\.test_dhcp_ipv6\.NetworksTestDHCPv6\.test_dhcp_stateful_router
+
+# Tungsten Fabric has own DHCP service. DHCP agents from Neutron conflict
+# with TF services, so they are not assigned to TF-networks
+tempest\.api\.network\.admin\.test_dhcp_agent_scheduler\.DHCPAgentSchedulersTestJSON\.test_list_networks_hosted_by_one_dhcp
+neutron_tempest_plugin\.api\.admin\.test_dhcp_agent_scheduler\.DHCPAgentSchedulersTestJSON\.test_list_networks_hosted_by_one_dhcp

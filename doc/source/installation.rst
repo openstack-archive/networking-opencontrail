@@ -22,14 +22,17 @@ Manual configuration
 
 #. Adjust ``/etc/neutron/neutron.conf`` to meet the example.
 
-   * Ensure you have ``ml2`` core plugin enabled
+   * Ensure you have ``ml2`` core plugin enabled.
    * Add ``opencontrail-router`` to ``service_plugins`` list.
+   * Select ``network_scheduler_driver`` due to manage DHCP agent scheduling.
+     More description in :ref:`troubleshooting <dhcp-schedule-decription>`.
 
    Example::
 
     [DEFAULT]
     core_plugin = ml2
     service_plugins = opencontrail-router
+    network_scheduler_driver = networking_opencontrail.agents.dhcp_scheduler.TFIgnoreDHCPScheduler
 
 #. Edit ``/etc/neutron/plugins/ml2/ml2_conf.ini`` file:
 
