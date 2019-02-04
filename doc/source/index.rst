@@ -21,6 +21,7 @@ Contents
    flavors
    architecture
    architecture/dns_port
+   architecture/dhcp_scheduler
    troubleshooting
    contributing
 
