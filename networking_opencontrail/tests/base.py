@@ -187,3 +187,32 @@ class IntegrationTestCase(base.BaseTestCase):
         port_body = {'port': {}}
         port_body['port'].update(kwargs)
         return self.q_update_resource(port['port'], port_body)
+
+    def q_create_security_group(self, name, **kwargs):
+        security_group = {}
+        security_group.update(kwargs)
+        security_group['name'] = name
+        security_group['project_id'] = self.project.id
+        security_group_body = {}
+        security_group_body['security_group'] = security_group
+        return self.q_create_resource(security_group_body)
+
+    def q_delete_security_group(self, security_group):
+        self.q_delete_resource(security_group['security_group'])
+
+    def q_update_security_group(self, security_group, **kwargs):
+        security_group_body = {'security_group': {}}
+        security_group_body['security_group'].update(kwargs)
+        return self.q_update_resource(security_group['security_group'],
+                                      security_group_body)
+
+    def q_create_security_group_rule(self, security_group_id, **kwargs):
+        security_group_rule = {}
+        security_group_rule.update(kwargs)
+        security_group_rule['security_group_id'] = security_group_id
+        security_group_rule_body = {}
+        security_group_rule_body['security_group_rule'] = security_group_rule
+        return self.q_create_resource(security_group_rule_body)
+
+    def q_remove_security_group_rule(self, rule):
+        self.q_delete_resource(rule['security_group_rule'])
