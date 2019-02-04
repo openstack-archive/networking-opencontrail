@@ -18,6 +18,11 @@
     name: python-pip
     state: present
 
+- name: Install common pre-requisites
+  become: yes
+  shell: |
+    easy_install pip
+
 - name: Add docker-ce repository
   become: yes
   shell: |
