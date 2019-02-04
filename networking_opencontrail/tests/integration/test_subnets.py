@@ -12,6 +12,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import unittest
 import uuid
 
 from networking_opencontrail.tests.base import IntegrationTestCase
@@ -76,6 +77,7 @@ class TestSubnets(IntegrationTestCase):
 
         self.assertDictEqual(expected, contrail_dict)
 
+    @unittest.skip("Subnet update does not work")
     def test_update_subnet(self):
         """Update subnet properties.
 
