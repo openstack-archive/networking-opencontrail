@@ -67,6 +67,20 @@
     state: directory
     mode: a=rw
 
+- name: Copy patch for workaround
+  become: yes
+  copy:
+    src: "fix_easy_install.patch"
+    dest: "{{ contrail_deployer_path }}"
+
+- name: Fix easy_install in contrail ansible deployer (workaround)
+  become: yes
+  shell: |
+    git apply fix_easy_install.patch
+  args:
+    chdir: "{{ contrail_deployer_path }}"
+    executable: /bin/bash
+
 - name: "[CONTRAIL ANSIBLE DEPLOYER]: configure instances"
   shell: |
     set -e
