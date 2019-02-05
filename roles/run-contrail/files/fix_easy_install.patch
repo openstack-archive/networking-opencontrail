@@ -1,0 +1,16 @@
+diff --git a/playbooks/roles/instance/tasks/install_software_Linux.yml b/playbooks/roles/instance/tasks/install_software_Linux.yml
+index 77ebdfa..8372eb9 100644
+--- a/playbooks/roles/instance/tasks/install_software_Linux.yml
++++ b/playbooks/roles/instance/tasks/install_software_Linux.yml
+@@ -47,9 +47,8 @@
+     state: present
+ 
+ - name: Install common pre-requisites
+-  easy_install:
+-    name: pip
+-    state: latest
++  shell: |
++    easy_install pip
+ 
+ - name: install rsyslogd
+   package:
