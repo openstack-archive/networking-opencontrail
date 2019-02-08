@@ -42,3 +42,7 @@
     - name: Pause execution to make sure workers flushed all logs before stoping
       pause:
         seconds: 30
+  roles:
+    - role: fetch-subunit-output
+      become: yes
+      zuul_work_dir: "{{ zuul.project.src_dir }}"
