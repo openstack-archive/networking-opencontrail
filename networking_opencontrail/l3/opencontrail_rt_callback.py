@@ -13,7 +13,6 @@
 #    under the License.
 #
 
-from neutron.db import common_db_mixin
 from neutron.db import extraroute_db
 from neutron.db import l3_agentschedulers_db
 from neutron.db import l3_dvr_db
@@ -30,8 +29,7 @@ import networking_opencontrail.drivers.drv_opencontrail as driver
 LOG = logging.getLogger(__name__)
 
 
-class OpenContrailRouterHandler(common_db_mixin.CommonDbMixin,
-                                extraroute_db.ExtraRoute_db_mixin,
+class OpenContrailRouterHandler(extraroute_db.ExtraRoute_db_mixin,
                                 l3_dvr_db.L3_NAT_with_dvr_db_mixin,
                                 l3_gwmode_db.L3_NAT_db_mixin,
                                 l3_agentschedulers_db.L3AgentSchedulerDbMixin):
