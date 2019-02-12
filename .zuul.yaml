@@ -12,30 +12,31 @@
       - openstack-cover-jobs-neutron
     check:
       jobs:
-        - noc-integration:
-            voting: false
-        - noc-tempest:
-            voting: false
-        - noc-tempest-neutron-plugin:
-            voting: false
-    gate:
-      jobs:
-        - noc-integration:
-            voting: false
-        - noc-tempest:
-            voting: false
-        - noc-tempest-neutron-plugin:
-            voting: false
-    periodic:
-      jobs:
-        - noc-integration:
-            branches:
-              - master
-              - ^stable/[a-z]+$
-        - noc-tempest-neutron-plugin:
-            branches:
-              - master
-              - ^stable/[a-z]+$
+        - noc-linters
+    #     - noc-integration:
+    #         voting: false
+    #     - noc-tempest:
+    #         voting: false
+    #     - noc-tempest-neutron-plugin:
+    #         voting: false
+    # gate:
+    #   jobs:
+    #     - noc-integration:
+    #         voting: false
+    #     - noc-tempest:
+    #         voting: false
+    #     - noc-tempest-neutron-plugin:
+    #         voting: false
+    # periodic:
+    #   jobs:
+    #     - noc-integration:
+    #         branches:
+    #           - master
+    #           - ^stable/[a-z]+$
+    #     - noc-tempest-neutron-plugin:
+    #         branches:
+    #           - master
+    #           - ^stable/[a-z]+$
 
 - job:
     name: noc-base
@@ -160,43 +161,58 @@
             ml2_type_vlan:
               network_vlan_ranges: public:1:1000
 
-- job:
-    name: noc-integration
-    parent: noc-base
-    description: Integration tests between devstack and opencontrail
-    run: playbooks/zuul/noc-integration.yaml
-    vars:
-      tox_envlist: integration
-    post-run: playbooks/zuul/post-integration.yaml
+# - job:
+#     name: noc-integration
+#     parent: noc-base
+#     description: Integration tests between devstack and opencontrail
+#     run: playbooks/zuul/noc-integration.yaml
+#     vars:
+#       tox_envlist: integration
+#     post-run: playbooks/zuul/post-integration.yaml
 
-- job:
-    name: noc-tempest
-    parent: noc-base
-    description: Tempest network tests
-    run: playbooks/zuul/noc-tempest.yaml
-    vars:
-      devstack_local_conf:
-        test-config:
-          $TEMPEST_CONFIG:
-            network:
-              project_networks_reachable: true
-      tox_envlist: all-plugin
-      tempest_test_regex: (?x)^tempest\.(api|scenario).*$
-      tempest_test_blacklist: "{{devstack_base_dir}}/networking-opencontrail/tempest-blacklist.txt"
+# - job:
+#     name: noc-tempest
+#     parent: noc-base
+#     description: Tempest network tests
+#     run: playbooks/zuul/noc-tempest.yaml
+#     vars:
+#       devstack_local_conf:
+#         test-config:
+#           $TEMPEST_CONFIG:
+#             network:
+#               project_networks_reachable: true
+#       tox_envlist: all-plugin
+#       tempest_test_regex: (?x)^tempest\.(api|scenario).*$
+#       tempest_test_blacklist: "{{devstack_base_dir}}/networking-opencontrail/tempest-blacklist.txt"
 
-- job:
-    name: noc-tempest-neutron-plugin
-    parent: noc-tempest
-    description: Tempest neutron plugin tests
-    vars:
-      devstack_local_conf:
-        test-config:
-          $TEMPEST_CONFIG:
-            network:
-              project_networks_reachable: true
-            neutron_plugin_options:
-              available_type_drivers: vlan,local
-      devstack_plugins:
-        networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
-        neutron-tempest-plugin: git://git.openstack.org/openstack/neutron-tempest-plugin
-      tempest_test_regex: (?x)^neutron_tempest_plugin.*$
+# - job:
+#     name: noc-tempest-neutron-plugin
+#     parent: noc-tempest
+#     description: Tempest neutron plugin tests
+#     vars:
+#       devstack_local_conf:
+#         test-config:
+#           $TEMPEST_CONFIG:
+#             network:
+#               project_networks_reachable: true
+#             neutron_plugin_options:
+#               available_type_drivers: vlan,local
+#       devstack_plugins:
+#         networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
+#         neutron-tempest-plugin: git://git.openstack.org/openstack/neutron-tempest-plugin
+#       tempest_test_regex: (?x)^neutron_tempest_plugin.*$
+
+# - job:
+#     name: noc-ansible-linter
+#     parent: noc-base
+#     run: openstack-zuul-jobs-linters
+
+  - job:
+      name: noc-linters
+      parent: openstack-zuul-jobs-linters
+      required-projects:
+        - openstack-dev/devstack
+      vars:
+        tox_envlist: linters
+        tox_environment:
+          ANSIBLE_ROLES_PATH: ~/src/git.openstack.org/opendev/base-jobs/roles:~/src/git.openstack.org/openstack-infra/zuul-jobs/roles:~/src/git.openstack.org/openstack-infra/openstack-zuul-jobs/roles:~/src/git.openstack.org/openstack-infra/project-config/roles:~/src/git.openstack.org/openstack-infra/system-config/roles:~/src/git.openstack.org/openstack-dev/devstack/roles
