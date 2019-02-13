@@ -9,6 +9,7 @@
       - openstack-python35-jobs-neutron
       - openstack-python36-jobs-neutron
       - check-requirements
+      - openstack-cover-jobs-neutron
     check:
       jobs:
         - noc-integration:
