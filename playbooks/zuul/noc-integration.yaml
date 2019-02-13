@@ -38,14 +38,3 @@
       args:
         chdir: "{{ zuul.project.src_dir }}"
         executable: /bin/bash
-
-    - name: Pause execution to make sure workers flushed all logs before stoping
-      pause:
-        seconds: 30
-
-    - name: Collect results of integration tests
-      become: yes
-      include_role:
-        name: fetch-subunit-output
-      vars:
-        zuul_work_dir: "{{ ansible_user_dir }}/{{ zuul.project.src_dir }}"

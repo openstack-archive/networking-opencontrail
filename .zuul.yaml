@@ -166,6 +166,7 @@
     run: playbooks/zuul/noc-integration.yaml
     vars:
       tox_envlist: integration
+    post-run: playbooks/zuul/post-integration.yaml
 
 - job:
     name: noc-tempest
