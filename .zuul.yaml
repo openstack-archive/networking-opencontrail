@@ -163,6 +163,7 @@
     name: noc-integration
     parent: noc-base
     description: Integration tests between devstack and opencontrail
+    post-run: playbooks/zuul/post-integration.yaml
     run: playbooks/zuul/noc-integration.yaml
     vars:
       tox_envlist: integration
