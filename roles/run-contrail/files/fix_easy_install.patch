@@ -1,12 +1,11 @@
-diff --git a/playbooks/roles/instance/tasks/install_software_Linux.yml b/playbooks/roles/instance/tasks/install_software_Linux.yml
-index cc34d53..290633a 100644
---- a/playbooks/roles/instance/tasks/install_software_Linux.yml
-+++ b/playbooks/roles/instance/tasks/install_software_Linux.yml
-@@ -55,5 +55,4 @@
+diff --git a/playbooks/roles/instance/tasks/RedHat.yml b/playbooks/roles/instance/tasks/RedHat.yml
+index b9e9796..2b11581 100644
+--- a/playbooks/roles/instance/tasks/RedHat.yml
++++ b/playbooks/roles/instance/tasks/RedHat.yml
+@@ -29,4 +29,3 @@
  - name: Install common pre-requisites
 -  easy_install:
 -    name: pip
 -    state: latest
 +  shell: |
 +    easy_install pip
- 
