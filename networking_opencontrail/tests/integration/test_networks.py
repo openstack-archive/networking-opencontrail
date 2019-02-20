@@ -30,25 +30,6 @@ class TestManageNetwork(IntegrationTestCase):
 
         self.assertIsNone(tf_net.get('provider_properties'))
 
-    def test_create_network_flat(self):
-        net = {
-            'name': 'test_flat_network',
-            'provider:network_type': 'flat',
-            'provider:physical_network': 'public',
-            'admin_state_up': True,
-        }
-        q_net = self.q_create_network(**net)
-        tf_net = self.tf_get_resource('virtual-network',
-                                      q_net['network']['id'])
-
-        expected_provider_props = {
-            'segmentation_id': None,
-            'physical_network': q_net['network']['provider:physical_network']
-        }
-        self.assertIsNotNone(tf_net.get('provider_properties'))
-        self.assertDictEqual(tf_net['provider_properties'],
-                             expected_provider_props)
-
     def test_create_network_vlan(self):
         net = {
             'name': 'test_vlan_network',
