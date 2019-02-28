@@ -107,20 +107,20 @@ class TFL3ServiceProvider(base.L3ServiceProvider):
 
     @registry.receives(resources.ROUTER_INTERFACE, [events.AFTER_CREATE])
     @log_helpers.log_method_call
-    def router_intf_after_create(self, resource, event, trigger, **kwargs):
-        context = kwargs['context']
-        router_id = kwargs['router_id']
-        interface_info = {'port_id': kwargs['port_id']}
+    def router_intf_after_create(self, resource, event, trigger, payload=None):
+        context = payload.context
+        router_id = payload.resource_id
+        interface_info = {'port_id': payload.metadata['port_id']}
         if not self._validate_l3_flavor(context, router_id):
             return
         self.driver.add_router_interface(context, router_id, interface_info)
 
     @registry.receives(resources.ROUTER_INTERFACE, [events.AFTER_DELETE])
     @log_helpers.log_method_call
-    def router_intf_after_delete(self, resource, event, trigger, **kwargs):
-        context = kwargs['context']
-        router_id = kwargs['router_id']
-        interface_info = kwargs['interface_info']
+    def router_intf_after_delete(self, resource, event, trigger, payload=None):
+        context = payload.context
+        router_id = payload.resource_id
+        interface_info = payload.metadata['interface_info']
         if not self._validate_l3_flavor(context, router_id):
             return
         self.driver.remove_router_interface(context, router_id, interface_info)
