@@ -54,7 +54,7 @@ Mechanism Drivers API is pretty well documented on `OpenStack page`_ and `Neutro
 In some situation Tungsten Fabric allocates IP address that are not requested
 from OpenStack, for example on creating subnet TF creates service for DNS&DHCP
 which need an IP. To synchronize IP mapping in Neutron and TF, plugin creates
-a port with this IP. See more in :doc:`architecture/dns_port`
+a port with this IP. See more in :doc:`dns_port`
 
 .. _OpenStack page: https://docs.openstack.org/neutron/latest/admin/config-ml2.html
 .. _Neutron wiki: https://wiki.openstack.org/wiki/Neutron/ML2#Mechanism_Drivers
