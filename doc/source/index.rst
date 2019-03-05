@@ -19,9 +19,7 @@ Contents
    devstack
    usage
    flavors
-   architecture
-   architecture/dns_port
-   architecture/dhcp_scheduler
+   architecture/index
    troubleshooting
    contributing
 
