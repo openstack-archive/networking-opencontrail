@@ -57,7 +57,6 @@ neutron_tempest_plugin\.api\.test_routers\.RoutersIpV6Test\.test_router_interfac
 
 # vRouter does not behave as L3Agent. Tests expect to L3Agent service running
 neutron_tempest_plugin\.api\.admin\.test_l3_agent_scheduler\.L3AgentSchedulerTestJSON
-tempest\.api\.network\.admin\.test_l3_agent_scheduler\.L3AgentSchedulerTestJSON
 
 # There is a conflict between how Neutron and vnc_openstack behave
 # Vnc_openstack does not allow adding new fixed ip for already existed port
