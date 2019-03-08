@@ -20,8 +20,6 @@ import requests
 from neutron_lib.constants import ATTR_NOT_SPECIFIED
 from neutron_lib.exceptions import BadRequest
 
-from neutron.db import quota_db  # noqa
-
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils as json

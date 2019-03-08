@@ -13,7 +13,6 @@
 #    under the License.
 #
 
-from neutron.db import quota_db  # noqa
 from neutron.extensions import portbindings
 from neutron.extensions import securitygroup
 from neutron_lib.exceptions import allowedaddresspairs
