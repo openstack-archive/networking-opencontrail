@@ -44,6 +44,7 @@ neutron_tempest_plugin\.scenario\.test_connectivity\.NetworkConnectivityTest\.te
 .*revision.*
 .*timestamp.*
 .*_ha.*
+(?i).*ipv6.*
 neutron_tempest_plugin.*TrunkTestJSON.*
 neutron_tempest_plugin\.scenario\.test_floatingip\.FloatingIPQosTest
 neutron_tempest_plugin\.api\.test_routers\.DvrRoutersTestToCentralized\.test_convert_centralized_router
