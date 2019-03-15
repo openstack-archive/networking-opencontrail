@@ -222,7 +222,8 @@ class SubnetDNSCompatibilityIntegratorTestCase(testlib_api.SqlTestCase):
                      'device_id': subnet['id'],
                      'device_owner': subnet_dns_integrator.TF_DNS_DEVICE_OWNER,
                      'admin_state_up': True,
-                     'name': 'tungstenfabric-dns-service'}
+                     'name': 'tungstenfabric-dns-service',
+                     'security_groups': []}
         return port_data
 
     def _get_callback_params(self, resource, payload, event):
