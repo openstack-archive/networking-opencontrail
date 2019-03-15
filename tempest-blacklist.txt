@@ -44,6 +44,7 @@ neutron_tempest_plugin\.scenario\.test_connectivity\.NetworkConnectivityTest\.te
 .*revision.*
 .*timestamp.*
 .*_ha.*
+(?i).*ipv6.*
 neutron_tempest_plugin.*TrunkTestJSON.*
 neutron_tempest_plugin\.scenario\.test_floatingip\.FloatingIPQosTest
 neutron_tempest_plugin\.api\.test_routers\.DvrRoutersTestToCentralized\.test_convert_centralized_router
@@ -61,6 +62,12 @@ neutron_tempest_plugin\.api\.admin\.test_l3_agent_scheduler\.L3AgentSchedulerTes
 # There is a conflict between how Neutron and vnc_openstack behave
 # Vnc_openstack does not allow adding new fixed ip for already existed port
 tempest\.scenario\.test_network_v6\.TestGettingAddress\.test_dualnet_multi_prefix_slaac
+tempest\.api\.network\.test_ports\.PortsTestJSON\.test_create_update_port_with_second_ip
+
+# The tests below update security groups of a port as well as its fixed ip
+# It may be possible to modify the tests so that they don't change the fixed ip
+tempest\.api\.network\.test_ports\.PortsTestJSON\.test_update_port_with_security_group_and_extra_attributes
+tempest\.api\.network\.test_ports\.PortsTestJSON\.test_update_port_with_two_security_groups_and_extra_attributes
 
 # Tungsten Fabric has own DHCP service. DHCP agents from Neutron conflict
 # with TF services, so they are not assigned to TF-networks

@@ -125,7 +125,8 @@ class SubnetDNSCompatibilityIntegrator(object):
                      'device_id': subnet['id'],
                      'device_owner': TF_DNS_DEVICE_OWNER,
                      'admin_state_up': True,
-                     'name': 'tungstenfabric-dns-service'}
+                     'name': 'tungstenfabric-dns-service',
+                     'security_groups': []}
         try:
             self._core_plugin.create_port(context, {'port': port_data})
         except Exception:
