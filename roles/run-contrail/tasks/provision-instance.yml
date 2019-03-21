@@ -68,5 +68,5 @@
   become: yes
   service:
     name: docker
-    state: running
+    state: started
     enabled: yes
