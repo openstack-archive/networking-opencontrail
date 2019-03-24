@@ -11,7 +11,7 @@
   lineinfile:
     path: ~/devstack/local.conf
     regexp: '^enable_plugin networking-bgpvpn'
-    line: 'enable_plugin networking-bgpvpn git://git.openstack.org/openstack/networking-bgpvpn.git stable/ocata'
+    line: 'enable_plugin networking-bgpvpn https://git.openstack.org/openstack/networking-bgpvpn.git stable/ocata'
     insertafter: 'enable_plugin'
 
 - name: Update local.conf with driver
@@ -32,7 +32,7 @@
 
 - name: Fetch git repository
   git:
-    repo: "git://git.openstack.org/openstack/networking-bgpvpn.git"
+    repo: "https://git.openstack.org/openstack/networking-bgpvpn.git"
     dest: /opt/stack/networking-bgpvpn
     version: "{{ openstack_branch }}"
     accept_hostkey: yes
