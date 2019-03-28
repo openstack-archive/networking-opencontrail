@@ -61,7 +61,7 @@
       - openstack/nova
     vars:
       devstack_plugins:
-        networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
+        networking-opencontrail: https://git.openstack.org/openstack/networking-opencontrail
       devstack_base_dir: /opt/stack
       devstack_localrc:
         DEBUG: true
@@ -198,6 +198,6 @@
             neutron_plugin_options:
               available_type_drivers: vlan,local
       devstack_plugins:
-        networking-opencontrail: git://git.openstack.org/openstack/networking-opencontrail
-        neutron-tempest-plugin: git://git.openstack.org/openstack/neutron-tempest-plugin
+        networking-opencontrail: https://git.openstack.org/openstack/networking-opencontrail
+        neutron-tempest-plugin: https://git.openstack.org/openstack/neutron-tempest-plugin
       tempest_test_regex: (?x)^neutron_tempest_plugin.*$

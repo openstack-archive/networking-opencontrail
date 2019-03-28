@@ -19,7 +19,7 @@
 - name: Fetch devstack requirements
   become: yes
   git:
-    repo: "git://git.openstack.org/openstack/requirements.git"
+    repo: "https://git.openstack.org/openstack/requirements.git"
     dest: /opt/stack/requirements
     version: "{{ openstack_branch }}"
     accept_hostkey: yes
