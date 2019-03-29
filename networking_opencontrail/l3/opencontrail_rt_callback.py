@@ -70,13 +70,13 @@ class OpenContrailRouterHandler(extraroute_db.ExtraRoute_db_mixin,
                 created_router["external_gateway_info"][
                     "external_fixed_ips"] = gw_fixed_ips
 
-            self.snat_sync.sync_snat_interfaces(context, created_router['id'],
-                                                created_router)
-
             session = db_api.get_writer_session()
             with session.begin(subtransactions=True):
                 super(OpenContrailRouterHandler,
                       self).create_router(context, {'router': created_router})
+
+            self.snat_sync.sync_snat_interfaces(context, created_router['id'],
+                                                created_router)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 LOG.error("Failed to create a router %(id)s: %(err)s",
