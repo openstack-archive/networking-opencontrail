@@ -13,6 +13,9 @@
 #    under the License.
 #
 
+from yaml import load
+
+from oslo_config import cfg
 from oslo_log import log as logging
 
 import networking_opencontrail.drivers.drv_opencontrail as drv
@@ -46,7 +49,13 @@ class OpenContrailMechDriver(api.MechanismDriver):
             opencontrail_sg_callback.OpenContrailSecurityGroupHandler(self))
         self.subnet_handler = (
             subnet_dns_integrator.SubnetDNSCompatibilityIntegrator(self.drv))
+        self.barmetals = self._load_barmetal_definition()
         LOG.info("Initialization of networking-opencontrail plugin: COMPLETE")
+
+    def _load_barmetal_definition(self):
+        # if cfg.CONF.APISERVER.topology:
+        with open("/etc/neutron/topology.yaml", "r") as topology:
+            return load(topology)
 
     def create_network_precommit(self, context):
         pass
@@ -130,6 +139,20 @@ class OpenContrailMechDriver(api.MechanismDriver):
             return
 
         try:
+            if (port['port']['host_id'] and
+                    port['port']['host_id'] in self.barmetals):
+                import pdb
+                pdb.set_trace()
+                profile = {
+                    'port_id': 'ge-0/0/0', 'switch_id': 'pe-2/2/2',
+                    'switch_info': 'vmx-external-gw', 'fabric': 'fab01'
+                }
+                binding_profile = {'local_link_information': [profile]}
+                vnic_type = 'baremetal'
+                port['port'].update({
+                    'binding:profile': binding_profile,
+                    'binding:vnic_type': vnic_type
+                })
             self.drv.create_port(context._plugin_context, port)
         except Exception:
             LOG.exception("Create Port Failed")
