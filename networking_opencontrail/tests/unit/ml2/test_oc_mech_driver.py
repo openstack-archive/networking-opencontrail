@@ -189,6 +189,34 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
 
         mech_driver.drv.assert_has_calls(expected_calls)
 
+    def test_create_port_with_baremetal_bindings(self):
+        network_id = 'test_net1'
+        tenant_id = 'ten-1'
+        port_id = 'port-1'
+
+        port_context, port = self.get_port_context(tenant_id, network_id,
+                                                   port_id,
+                                                   host_id='b1s19-node3')
+        profile = {
+            'port_id': 'ge-0/0/0',
+            'switch_id': 'pe-2/2/2',
+            'switch_info': 'vmx-external-gw',
+            'fabric': 'fab01',
+        }
+
+        port['port'].update(
+            {'binding:profile': {'local_link_information': [profile]},
+             'binding:vnic_type': 'baremetal'})
+        self.drv.create_port_postcommit(port_context)
+
+        expected_calls = [
+            mock.call.OpenContrailDrivers(),
+            mock.call.OpenContrailDrivers().create_port(
+                port_context._plugin_context, port)
+        ]
+
+        mech_driver.drv.assert_has_calls(expected_calls)
+
     def test_delete_port(self):
         network_id = 'test_net1'
         tenant_id = 'ten-1'
@@ -365,14 +393,15 @@ class OpenContrailTestCases(testlib_api.SqlTestCase):
         return context, subnt
 
     def get_port_context(self, ten_id, net_id, port_id, port_name=None,
-                         device_owner=None):
+                         device_owner=None, host_id=None):
         if not port_name:
             port_name = 'test_port'
         port = {'id': port_id,
                 'network_id': net_id,
                 'tenant_id': ten_id,
                 'name': port_name,
-                'device_owner': device_owner}
+                'device_owner': device_owner,
+                'host_id': host_id}
         context = fake_port_context(ten_id, port, port)
         prt = {'port': port}
         return context, prt
