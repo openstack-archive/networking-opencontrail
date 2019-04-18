@@ -13,6 +13,9 @@
 #    under the License.
 #
 
+import yaml
+
+from oslo_config import cfg
 from oslo_log import log as logging
 
 import networking_opencontrail.drivers.drv_opencontrail as drv
@@ -46,7 +49,13 @@ class OpenContrailMechDriver(api.MechanismDriver):
             opencontrail_sg_callback.OpenContrailSecurityGroupHandler(self))
         self.subnet_handler = (
             subnet_dns_integrator.SubnetDNSCompatibilityIntegrator(self.drv))
+        self.baremetals = self._load_barmetal_definition()
         LOG.info("Initialization of networking-opencontrail plugin: COMPLETE")
+
+    def _load_barmetal_definition(self):
+        # if cfg.CONF.APISERVER.topology:
+        with open("/etc/neutron/topology.yaml", "r") as topology:
+            return yaml.load(topology)
 
     def create_network_precommit(self, context):
         pass
@@ -130,6 +139,8 @@ class OpenContrailMechDriver(api.MechanismDriver):
             return
 
         try:
+            bindings = self._get_binding_profile(port)
+            port['port'].update(bindings)
             self.drv.create_port(context._plugin_context, port)
         except Exception:
             LOG.exception("Create Port Failed")
@@ -214,6 +225,27 @@ class OpenContrailMechDriver(api.MechanismDriver):
             self.drv.delete_security_group_rule(context, sgr_id)
         except Exception:
             LOG.exception('Failed to delete Security Group rule %s' % sgr_id)
+
+    def _get_binding_profile(self, port):
+        if 'host_id' in port['port']:
+            host_id = port['port']['host_id']
+            nodes = [n for n in self.baremetals['nodes'] if
+                     n['name'] == host_id]
+            if len(nodes) == 1:
+                node_port = nodes[0]['ports'][0]
+                profile = {
+                    'port_id': node_port['port_name'],
+                    'switch_id': node_port['switch_id'],
+                    'switch_info': node_port['switch_name'],
+                    'fabric': node_port['fabric'],
+                }
+                binding_profile = {'local_link_information': [profile]}
+                vnic_type = 'baremetal'
+                return {
+                    'binding:profile': binding_profile,
+                    'binding:vnic_type': vnic_type
+                }
+        return {}
 
     def _is_callback_to_omit(self, device_owner):
         # Operation on port should be not propagated to TungstenFabric when:
