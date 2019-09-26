@@ -1,3 +1,0 @@
----
-- include_tasks: update_kernel.yml
-- include_tasks: contrail.yml
